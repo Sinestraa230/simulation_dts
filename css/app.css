@@ -22,7 +22,27 @@
 .fld input{width:56px;background:#0c1427;border:1px solid #2c3b61;border-radius:6px;color:var(--txt);padding:5px 6px;font:inherit;text-align:center}
 .chk{font-size:12.5px;color:var(--dim);display:flex;gap:5px;align-items:center}
 
-main{display:grid;grid-template-rows:minmax(380px,1fr) 340px;min-height:0}
+main{display:grid;min-height:0}
+main.view-circuit{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(380px,1fr) 340px;grid-template-areas:"c" "b"}
+main.view-split{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) 250px;grid-template-areas:"c s" "b b"}
+main.view-city{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 250px;grid-template-areas:"s" "b"}
+#circuitWrap{grid-area:c}#scenePanel{grid-area:s}#bottom{grid-area:b}
+.view-circuit #scenePanel,.view-city #circuitWrap{display:none}
+.view-split #circuitWrap{border-right:1px solid var(--line)}
+.view-split #legend{display:none}
+#scenePanel{position:relative;min-height:0;min-width:0;overflow:hidden;background:#0a0f1d;border-bottom:1px solid var(--line)}
+#sceneBig{position:absolute;inset:0;width:100%;height:100%;display:block}
+#sceneBar{position:absolute;left:12px;top:10px;right:12px;display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;pointer-events:none}
+#sceneBar>*{pointer-events:auto;background:rgba(14,22,42,.88)}
+#sceneBar .lbl{padding:3px 8px;border-radius:999px;border:1px solid #2c3b61;margin:0}
+#sceneBar .chk{padding:3px 10px;border-radius:999px;border:1px solid #2c3b61}
+#sceneHud{position:absolute;left:12px;bottom:12px;background:rgba(10,16,32,.88);border:1px solid #2c3b61;border-radius:12px;padding:8px 12px;min-width:190px}
+.hud-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);margin-bottom:4px}
+.hud-main{display:flex;gap:14px;align-items:center}
+#sceneHud .big-hex{font-size:40px}
+#hudLamps{font-size:12.5px;line-height:1.8}
+#hudStats{font-size:11.5px;color:var(--dim);margin-top:5px}
+#hudPhase{display:inline-block;margin-top:6px}
 #circuitWrap{position:relative;min-height:0;background:radial-gradient(1200px 500px at 50% 0%,#0e1730,#0a0f1d 70%);border-bottom:1px solid var(--line);overflow:hidden}
 #circuit{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 #circuit:active{cursor:grabbing}
@@ -60,8 +80,10 @@ main{display:grid;grid-template-rows:minmax(380px,1fr) 340px;min-height:0}
 #timing{flex:1;width:100%;min-height:0;border-radius:8px;background:#080d19}
 .tag{font-size:11.5px;padding:2px 9px;border-radius:999px;background:#17294d;border:1px solid #2f4a85}
 #sideBox{overflow:hidden}
-#isecRow{display:flex;gap:12px;align-items:center}
-#isec{width:150px;height:150px;flex:none;border-radius:10px;background:#0b1224}
+#isecRow{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+#sceneMini{width:184px;height:126px;flex:none;border-radius:10px;background:#0b1224;cursor:pointer;border:1px solid #243257}
+#sceneMini:hover{border-color:#4a6199}
+.view-split #sceneMini,.view-city #sceneMini{display:none}
 #isecInfo{flex:1;min-width:0}
 .big-hex{font:700 54px/1 "JetBrains Mono",ui-monospace,monospace;color:#ff5b3a;text-shadow:0 0 14px rgba(255,91,58,.55);letter-spacing:4px}
 .big-hex.x{color:var(--red);animation:xb .7s steps(2,start) infinite}
@@ -81,4 +103,7 @@ main{display:grid;grid-template-rows:minmax(380px,1fr) 340px;min-height:0}
 .modal{background:#101a31;border:1px solid #34497c;border-radius:14px;padding:22px 26px;max-width:640px;position:relative}
 .modal h2{margin:0 0 8px}.modal li{margin:7px 0;color:#c4cfe8}.modal .x{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--dim);font-size:24px}
 [hidden]{display:none!important}
-@media (max-width:1100px){#bottom{grid-template-columns:1fr}main{grid-template-rows:minmax(340px,60vh) auto}#app{height:auto}}
+@media (max-width:1100px){#bottom{grid-template-columns:1fr}#app{height:auto}
+main.view-circuit{grid-template-rows:minmax(340px,60vh) auto}
+main.view-split{grid-template-columns:1fr;grid-template-rows:minmax(320px,50vh) minmax(320px,50vh) auto;grid-template-areas:"c" "s" "b"}
+main.view-city{grid-template-rows:minmax(420px,70vh) auto}}

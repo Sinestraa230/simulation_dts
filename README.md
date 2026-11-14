@@ -17,7 +17,7 @@ Trang web tĩnh mô phỏng **chính mạch đã vẽ trên LogicWorks**: mỗi 
 | `js/routes.js` | Đường dây đã đi sẵn (sinh tự động, không sửa tay) |
 | `js/render.js` | Vẽ SVG: tô màu dây, xung chạy dọc dây, LED 7 đoạn, đèn, probe, zoom/kéo |
 | `js/timing.js` | Giản đồ thời gian trực tiếp (canvas) |
-| `js/intersection.js` | Ngã tư thu nhỏ, xe dừng/đi theo đèn của mạch |
+| `js/scene.js` | Ngã tư 2D bằng canvas: đường, nhà, cây, đèn có đếm lùi, ô tô/taxi/buýt/tải/xe máy theo mô hình bám xe, người đi bộ, ngày–chiều–đêm, mưa; đèn lấy từ mạch |
 | `js/tests.js` | Kịch bản Test 1–5 (chạy sống + tự kiểm) |
 | `js/app.js` | Ghép tất cả, điều khiển, thẻ chi tiết, chú thích |
 | `tools/route.js` | Đi dây tự động (A*). Chạy lại sau khi đổi vị trí linh kiện: `node tools/route.js` |
@@ -42,3 +42,8 @@ Trang web tĩnh mô phỏng **chính mạch đã vẽ trên LogicWorks**: mỗi 
 `node test/verify.js` chạy: 7.585 ca nhả RESET (độ trễ cố định và ngẫu nhiên theo loại IC, 6 cặp T<sub>X</sub>/T<sub>V</sub>, 61 thời điểm nhả), 522 ca độ trễ bằng nhau, 2.400 ca bấm RESET giữa chừng — đều 0 lỗi (đúng thứ tự pha, đúng độ dài pha, không X sau khi nhả, đèn đúng bảng).
 
 Lưu ý khi giả định hai bộ đếm 74LS192 có độ trễ rất khác nhau (không thực tế cho hai IC cùng loại): ở lần nạp đầu tiên sau RESET, xung BOR có thể đến U3 sau khi LOAD đã nhả và làm T<sub>X</sub> = 25 bắt đầu từ 15. Kiểm tra "stress" của `verify.js` in ra thông tin này. Với hai IC cùng loại và NOR-8 chậm hơn BOR (như CD4078B), tình huống này không xảy ra.
+
+
+## Chế độ xem
+
+Thanh trên cùng có 3 chế độ: **Mạch** (sơ đồ lớn, ngã tư thu nhỏ), **Mạch + Ngã tư** (hai khung cùng kích thước 50/50) và **Ngã tư** (toàn màn hình). Mở thẳng bằng `#split` hoặc `#city` sau địa chỉ trang. Trong khung ngã tư có chọn Ngày/Chiều/Đêm, mật độ xe, mưa, người đi bộ.

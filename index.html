@@ -17,6 +17,15 @@
       <div><h1>Mạch đèn giao thông ngã tư</h1><p>Bài 11 · Điện tử số · mô phỏng logic từng chân IC</p></div>
     </div>
 
+    <div class="ctl-group" id="viewctl">
+      <span class="lbl">Xem</span>
+      <div class="seg" id="viewSeg" role="group" aria-label="Chế độ xem">
+        <button data-view="circuit" class="on" title="Sơ đồ mạch là chính, ngã tư thu nhỏ ở góc dưới">Mạch</button>
+        <button data-view="split" title="Mạch và ngã tư cùng kích thước, đặt cạnh nhau">Mạch + Ngã tư</button>
+        <button data-view="city" title="Ngã tư toàn màn hình">Ngã tư</button>
+      </div>
+    </div>
+
     <div class="ctl-group" id="runctl">
       <button id="btnPower" class="btn primary">▶ Bật nguồn</button>
       <button id="btnPause" class="btn" disabled>⏸ Tạm dừng</button>
@@ -51,7 +60,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="main" class="view-circuit">
     <section id="circuitWrap">
       <svg id="circuit" role="img" aria-label="Sơ đồ mạch đèn giao thông"></svg>
 
@@ -97,6 +106,24 @@
       </div>
     </section>
 
+    <section id="scenePanel">
+      <canvas id="sceneBig" aria-label="Mô phỏng ngã tư"></canvas>
+      <div id="sceneBar">
+        <span class="lbl">Thời điểm</span>
+        <div class="seg small" id="todSeg"><button data-tod="0" class="on">Ngày</button><button data-tod="1">Chiều</button><button data-tod="2">Đêm</button></div>
+        <span class="lbl">Mật độ xe</span>
+        <div class="seg small" id="denSeg"><button data-den="0">Thưa</button><button data-den="1" class="on">Vừa</button><button data-den="2">Đông</button></div>
+        <label class="chk"><input id="chkRain" type="checkbox"> Mưa</label>
+        <label class="chk"><input id="chkPeds" type="checkbox" checked> Người đi bộ</label>
+      </div>
+      <div id="sceneHud">
+        <div class="hud-title">Đèn lấy trực tiếp từ mạch</div>
+        <div class="hud-main"><div id="hudHex" class="big-hex">--</div><div id="hudLamps"></div></div>
+        <div id="hudPhase" class="tag">—</div>
+        <div id="hudStats"></div>
+      </div>
+    </section>
+
     <section id="bottom">
       <div id="timingBox" class="panel">
         <div class="ph"><h3>Giản đồ thời gian trực tiếp</h3>
@@ -108,7 +135,7 @@
       <div id="sideBox" class="panel">
         <div class="ph"><h3>Ngã tư thu nhỏ</h3><span id="phaseTag" class="tag">—</span></div>
         <div id="isecRow">
-          <svg id="isec" viewBox="0 0 360 360"></svg>
+          <canvas id="sceneMini" title="Bấm để mở rộng"></canvas>
           <div id="isecInfo">
             <div class="big-hex" id="bigHex">--</div>
             <div class="cap" id="bigCap">số đếm lùi</div>
@@ -145,7 +172,7 @@
 <script src="js/routes.js"></script>
 <script src="js/render.js"></script>
 <script src="js/timing.js"></script>
-<script src="js/intersection.js"></script>
+<script src="js/scene.js"></script>
 <script src="js/tests.js"></script>
 <script src="js/app.js"></script>
 </body>

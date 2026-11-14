@@ -20,7 +20,8 @@
   });
   A.R = R;
   const TM = TIMING.create($('timing'), P);
-  const IS = ISEC.create($('isec'));
+  const SC = SCENE.create({});
+  const SPEEDF = { real: 1, x4: 2.2, x16: 3.5, slow: 1, step: 0 };
 
   /* ---------- sim ---------- */
   function newSim(TX, TV) {
@@ -34,7 +35,7 @@
       captionRules(sim, t, net, old, v);
     });
     A.sim = sim; A.pend = null; A.lastPhase = null;
-    R.clearPulses(); R.refreshAll(sim); TM.reset(sim); IS.clear();
+    R.clearPulses(); R.refreshAll(sim); TM.reset(sim); SC.clear();
     syncInputs(); updateResetBtn();
     return sim;
   }
@@ -71,6 +72,7 @@
     A.mode = m; document.querySelectorAll('#speedSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
     $('btnStep').hidden = m !== 'step'; $('btnEdge').hidden = m !== 'step';
     A.running = A.powered && m !== 'step' && !A.userPaused; $('btnPause').disabled = !A.powered || m === 'step';
+    SC.setSpeed(SPEEDF[m]);
     if (m === 'x16') R.clearPulses();
   }
 
@@ -89,7 +91,7 @@
     runScript();
     R.tick(now);
     TM.draw(sim.t); if (((now / 1000) | 0) % 5 === 0) TM.prune(sim.t);
-    IS.update(dt / 1000, A.running || (A.mode === 'step' && false));
+    SC.update(dt / 1000, (A.running || !A.powered) && !(A.mode === 'step' && A.powered)); SC.render();
     updateStatus();
     requestAnimationFrame(frame);
   }
@@ -108,7 +110,11 @@
     const lamp = (r, v, y, x) => `<span class="lt ${r === 1 ? 'r' : 'n'}">Đ</span><span class="lt ${v === 1 ? 'y' : 'n'}">V</span><span class="lt ${x === 1 ? 'g' : 'n'}">X</span>`;
     $('lampText').innerHTML = `<div>Hướng A ${lamp(L.DA, L.VA, 0, L.XA)}</div><div>Hướng B ${lamp(L.DB, L.VB, 0, L.XB)}</div>`;
     const col = (d, v, x) => (d === 'X' || v === 'X' || x === 'X') ? 'n' : (x === 1 ? 'g' : (v === 1 ? 'y' : (d === 1 ? 'r' : 'n')));
-    IS.setLights(col(L.DA, L.VA, L.XA), col(L.DB, L.VB, L.XB));
+    const lA = col(L.DA, L.VA, L.XA), lB = col(L.DB, L.VB, L.XB);
+    SC.setLights(lA, lB); SC.setCount(hx === 'X' ? 'XX' : hx); SC.setPower(A.powered);
+    $('hudHex').textContent = hx === 'X' ? 'XX' : hx; $('hudHex').classList.toggle('x', hx === 'X');
+    $('hudLamps').innerHTML = $('lampText').innerHTML; $('hudPhase').textContent = ph;
+    $('hudStats').innerHTML = `Đã qua: A <b>${SC.stats.A}</b> · B <b>${SC.stats.B}</b> xe<br>Đang chờ: A <b>${SC.wait.A}</b> · B <b>${SC.wait.B}</b> xe`;
     // chú thích khi pha ổn định
     if (A.powered && !st.includes('X')) {
       if (A.pend !== st) { A.pend = st; A.pendT = sim.t; }
@@ -251,7 +257,24 @@
   $('helpModal').onclick = e => { if (e.target === $('helpModal')) $('helpModal').hidden = true; };
   addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.code === 'Space') { e.preventDefault(); if (!A.powered) powerOn(); else if (A.mode !== 'step') setPause(!A.userPaused); } if (e.key === 'Escape') closeCard(); });
 
+  /* ---------- chế độ xem ---------- */
+  function setView(v) {
+    A.view = v; $('main').className = 'view-' + v;
+    document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+    SC.setTargets(v === 'circuit' ? [$('sceneMini')] : [$('sceneBig')]);
+    if (v !== 'city') requestAnimationFrame(() => requestAnimationFrame(() => R.fit()));
+    try { history.replaceState(null, '', v === 'circuit' ? location.pathname : '#' + v); } catch (e) { }
+  }
+  document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => setView(b.dataset.view));
+  $('sceneMini').onclick = () => setView('split');
+  document.querySelectorAll('#todSeg button').forEach(b => b.onclick = () => { document.querySelectorAll('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); SC.setTod(+b.dataset.tod); });
+  document.querySelectorAll('#denSeg button').forEach(b => b.onclick = () => { document.querySelectorAll('#denSeg button').forEach(x => x.classList.toggle('on', x === b)); SC.setDensity(+b.dataset.den); });
+  $('chkRain').onchange = e => SC.setRain(e.target.checked);
+  $('chkPeds').onchange = e => SC.setPeds(e.target.checked);
+  A.SC = SC; A.setView = setView;
+
   /* ---------- khởi động ---------- */
   newSim(); renderCaps(); setMode('real');
+  setView(['split', 'city'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'circuit');
   requestAnimationFrame(t => { A.lastNow = t; frame(t); });
 })();
