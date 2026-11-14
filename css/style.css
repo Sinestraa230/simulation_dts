@@ -14,7 +14,13 @@ svg text{font-family:"JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,mo
 .frame-lbl{pointer-events:none}
 .frame-title{font-size:13px;font-weight:700;fill:#9fb4e6;font-family:"Inter","Segoe UI",system-ui,sans-serif}
 .frame-sub{font-size:10.5px;fill:var(--mute);font-family:"Inter","Segoe UI",system-ui,sans-serif}
-.ic-box,.hex-box{fill:#121b33;stroke:#40527f;stroke-width:1.5}
+.ic-box{fill:url(#icFace);stroke:#4a5f92;stroke-width:1.4}
+.hex-box{fill:url(#hexFace);stroke:#4a5f92;stroke-width:1.4}
+.ic-shadow{fill:#000;opacity:.5;pointer-events:none}
+.ic-hi,.ic-lo,.ic-notch,.ic-head,.ic-accent{pointer-events:none}
+.ic-hi{fill:none;stroke:rgba(255,255,255,.3);stroke-width:1.2;stroke-linecap:round}
+.ic-lo{fill:none;stroke:rgba(0,0,0,.55);stroke-width:1.4;stroke-linecap:round}
+.ic-notch{fill:#070b17;stroke:#4a5f92;stroke-width:1}
 .comp{cursor:pointer}
 .comp:hover .ic-box,.comp:hover .hex-box,.comp:hover .gate-body{stroke:#7fa7ff}
 .comp.sel .ic-box,.comp.sel .hex-box,.comp.sel .gate-body{stroke:#ffd23a;stroke-width:2.4}
@@ -24,7 +30,7 @@ svg text{font-family:"JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,mo
 .ic-split{stroke:#2e3d63;stroke-width:1;stroke-dasharray:3 3}
 .pin-name{font-size:10px;fill:#c3cdec}
 .pin-num{font-size:8px;fill:#7f8db0}
-.gate-body{fill:#18244a;stroke:#5a74b8;stroke-width:1.6}
+.gate-body{fill:url(#gateFace);stroke:#6a86cc;stroke-width:1.6}
 .gate-xor{fill:none;stroke:#5a74b8;stroke-width:1.6}
 .gate-bubble{fill:#0a0f1d;stroke:#5a74b8;stroke-width:1.5}
 .gate-type{font-size:9px;fill:#9fb0dd}

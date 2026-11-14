@@ -35,6 +35,24 @@
     const defs = el('defs', null, svg);
     const glow = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
     el('feGaussianBlur', { stdDeviation: '4' }, glow);
+    // --- chất liệu nổi khối cho IC (chỉ tô màu/đổ bóng, không đụng tới dây) ---
+    const lg = (id, stops) => { const g = el('linearGradient', { id, x1: 0, y1: 0, x2: 0, y2: 1 }, defs); stops.forEach(([o, c, a]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a === undefined ? 1 : a }, g)); };
+    lg('icFace', [[0, '#26365f'], [.35, '#18254a'], [1, '#0d1530']]);
+    lg('gateFace', [[0, '#2c3f73'], [1, '#121c3d']]);
+    lg('hexFace', [[0, '#202a48'], [1, '#0b1124']]);
+    const ACC = { '74LS192': '#4ea1ff', '74LS157': '#b57cff', '74LS74': '#35e58a', '74LS04': '#ff8a3d', 'HEX': '#ff5b3a', 'NE555': '#ffb02e' };
+    Object.keys(ACC).forEach(k => lg('hd' + k, [[0, ACC[k], .55], [1, ACC[k], .10]]));
+    const shadow = (g, x, y, w, h, r) => el('rect', { x: x + 2.5, y: y + 4.5, width: w, height: h, rx: r, class: 'ic-shadow' }, g);
+    const bevel = (g, x, y, w, h, r, key, hdrH) => {
+      const col = ACC[key];
+      if (col) {
+        el('path', { d: `M${x + 1.5} ${y + hdrH} V${y + r} Q${x + 1.5} ${y + 1.5} ${x + r} ${y + 1.5} H${x + w - r} Q${x + w - 1.5} ${y + 1.5} ${x + w - 1.5} ${y + r} V${y + hdrH}Z`, fill: 'url(#hd' + key + ')', class: 'ic-head' }, g);
+        el('rect', { x: x + r, y: y + 1.5, width: w - 2 * r, height: 2.2, fill: col, opacity: .9, class: 'ic-accent' }, g);
+      }
+      el('path', { d: `M${x + 2} ${y + h - r} V${y + r} Q${x + 2} ${y + 2} ${x + r} ${y + 2} H${x + w - r}`, class: 'ic-hi' }, g);
+      el('path', { d: `M${x + w - 2} ${y + r} V${y + h - r} Q${x + w - 2} ${y + h - 2} ${x + w - r} ${y + h - 2} H${x + r}`, class: 'ic-lo' }, g);
+      if (key !== 'HEX') el('path', { d: `M${x + w / 2 - 6} ${y} A6 6 0 0 0 ${x + w / 2 + 6} ${y}`, class: 'ic-notch' }, g);
+    };
 
     const gFrames = el('g', { class: 'frames' }, svg), gWires = el('g', { class: 'wires' }, svg), gComps = el('g', { class: 'comps' }, svg), gTitles = el('g', { class: 'titles' }, svg),
       gProbes = el('g', { class: 'probes' }, svg), gPulses = el('g', { class: 'pulses' }, svg);
@@ -92,7 +110,9 @@
 
     function drawIC(c) {
       const g = el('g', { class: 'comp ic', 'data-id': c.id }, gComps);
+      shadow(g, c.x, c.y, c.w, c.h, 6);
       el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, class: 'ic-box' }, g);
+      bevel(g, c.x, c.y, c.w, c.h, 6, c.ic, 25);
       el('text', { x: c.x + 10, y: c.y + 17, class: 'ic-title' }, g, c.title);
       el('text', { x: c.x + c.w - 8, y: c.y + 17, class: 'ic-part', 'text-anchor': 'end' }, g, c.ic);
       const short = { U4: 'MUX hàng đơn vị', U5: 'MUX hàng chục', U2: 'Đếm lùi · đơn vị', U3: 'Đếm lùi · chục', U6: 'Trạng thái Q1Q0', U12: 'Đồng bộ RESET' }[c.id];
@@ -121,10 +141,12 @@
     function drawGate(c) {
       const g = el('g', { class: 'comp gate', 'data-id': c.id }, gComps);
       const type = c.gate, bub = (type === 'NAND' || type === 'NOR8') ? 8 : 0, bw = c.w - bub, m = c.y + c.h / 2;
+      const dG = (type === 'AND' || type === 'NAND') ? (() => { const r = 22; return `M${c.x} ${c.y} H${c.x + bw - r} A${r} ${c.h / 2} 0 0 1 ${c.x + bw - r} ${c.y + c.h} H${c.x}Z`; })() : gatePath(type, c.x, c.y, c.w, c.h);
+      el('path', { d: dG, class: 'ic-shadow', transform: 'translate(2.5,4.5)' }, g);
       if (type === 'AND' || type === 'NAND') {
-        const r = 22; el('path', { d: `M${c.x} ${c.y} H${c.x + bw - r} A${r} ${c.h / 2} 0 0 1 ${c.x + bw - r} ${c.y + c.h} H${c.x}Z`, class: 'gate-body' }, g);
+        el('path', { d: dG, class: 'gate-body' }, g);
       } else {
-        el('path', { d: gatePath(type, c.x, c.y, c.w, c.h), class: 'gate-body' }, g);
+        el('path', { d: dG, class: 'gate-body' }, g);
         if (type === 'XOR') el('path', { d: `M${c.x - 7} ${c.y} Q${c.x + 9} ${m} ${c.x - 7} ${c.y + c.h}`, class: 'gate-xor' }, g);
       }
       if (bub) el('circle', { cx: c.x + c.w - 4, cy: m, r: 4, class: 'gate-bubble' }, g);
@@ -135,7 +157,9 @@
     }
     function drawU9(c) {
       const g = el('g', { class: 'comp ic', 'data-id': c.id }, gComps);
+      shadow(g, c.x, c.y, c.w, c.h, 6);
       el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, class: 'ic-box' }, g);
+      bevel(g, c.x, c.y, c.w, c.h, 6, '74LS04', 25);
       el('text', { x: c.x + 10, y: c.y + 17, class: 'ic-title' }, g, 'U9');
       el('text', { x: c.x + c.w - 8, y: c.y + 17, class: 'ic-part', 'text-anchor': 'end' }, g, '74LS04');
       const names = ['RST_N → RST', 'RSY_N → RSY', 'Q0 → Q0_N', 'Q1 → Q1_N'];
@@ -154,7 +178,9 @@
     /* ---------- LED 7 đoạn ---------- */
     function drawHex(c) {
       const g = el('g', { class: 'comp hex', 'data-id': c.id }, gComps);
+      shadow(g, c.x, c.y, c.w, c.h, 8);
       el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 8, class: 'hex-box' }, g);
+      bevel(g, c.x, c.y, c.w, c.h, 8, 'HEX', 22);
       el('text', { x: c.x + 10, y: c.y + 15, class: 'ic-title' }, g, c.title);
       el('text', { x: c.x + c.w / 2, y: c.y + c.h - 8, class: 'ic-sub', 'text-anchor': 'middle' }, g, '74LS247 + LED 7 đoạn');
       const dg = el('g', { transform: `translate(${c.x + 38},${c.y + 28})` }, g), segs = {};
@@ -194,6 +220,7 @@
     /* ---------- nguồn, công tắc ---------- */
     function drawSource(c) {
       const g = el('g', { class: 'comp src', 'data-id': c.id }, gComps);
+      shadow(g, c.x, c.y, c.w, c.h, 6);
       el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 6, class: 'ic-box' }, g);
       if (c.kind === 'CLOCK') {
         el('text', { x: c.x + 10, y: c.y + 16, class: 'ic-title' }, g, 'CLOCK');
