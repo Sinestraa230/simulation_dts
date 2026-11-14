@@ -151,7 +151,7 @@
 
   /* ---------- tạo cảnh ---------- */
   function create(opts) {
-    const S = { lights: { A: 'n', B: 'n' }, count: '--', powered: false, tod: 0, todTarget: 0, density: 1, rain: false, pedsOn: true, speed: 1, blink: 0, time: 0, stats: { A: 0, B: 0 }, wait: { A: 0, B: 0 }, lanes: makeLanes(), peds: [], ped: { A: 'D', B: 'D' }, targets: [], recs: new Map(), rainDrops: [], ripples: [], clouds: [] };
+    const S = { lights: { A: 'n', B: 'n' }, count: '--', countRed: '--', powered: false, tod: 0, todTarget: 0, density: 1, rain: false, pedsOn: true, speed: 1, blink: 0, time: 0, stats: { A: 0, B: 0 }, wait: { A: 0, B: 0 }, lanes: makeLanes(), peds: [], ped: { A: 'D', B: 'D' }, targets: [], recs: new Map(), rainDrops: [], ripples: [], clouds: [] };
     const r0 = rng(4242);
     for (let i = 0; i < 160; i++) S.rainDrops.push({ x: r0(), y: r0(), s: .9 + r0() * .8, l: 8 + r0() * 10 });
     for (let i = 0; i < 4; i++) S.clouds.push({ x: r0() * 1400 - 200, y: r0() * 700, rx: 160 + r0() * 160, ry: 70 + r0() * 60, v: 6 + r0() * 8 });
@@ -279,7 +279,7 @@
       for (const L of S.lanes) for (const c of L.vs) if (c.v < 6 && c.u < -STOP + 30 && c.u > -STOP - 330) S.wait[L.g]++;
     };
     S.setLights = (a, b) => { S.lights.A = a; S.lights.B = b; };
-    S.setCount = s => { S.count = s; };
+    S.setCount = (s, red) => { S.count = s; S.countRed = red === undefined ? s : red; };
     S.setPower = p => { S.powered = p; };
     S.setSpeed = f => { S.speed = f; };
     S.setTod = k => { S.todTarget = k; };
@@ -428,7 +428,7 @@
       if (h.cn === 'below') by = h.y + ht / 2 + 4; else if (h.cn === 'above') by = h.y - ht / 2 - chh - 4;
       else if (h.cn === 'left') { bx = h.x - w / 2 - cw - 4; by = h.y - chh / 2; } else { bx = h.x + w / 2 + 4; by = h.y - chh / 2; }
       c.fillStyle = '#07090d'; rr(c, bx, by, cw, chh, 3); c.fill(); c.strokeStyle = '#2f3a4e'; c.lineWidth = 1; c.stroke();
-      let txt = S.count, col = LCOL[light] || '#ffc926';
+      let txt = light === 'r' ? S.countRed : S.count, col = LCOL[light] || '#ffc926';
       if (light === 'n' || !/^\d+$/.test(txt)) { txt = '--'; if (light === 'n' && (S.blink % 1) >= .5) col = 'rgba(255,201,38,.15)'; }
       if (txt.length === 1) txt = ' ' + txt; txt = txt.slice(-2);
       seg7(c, bx + 6, by + 4, 12, chh - 8, txt[0] === ' ' ? '' : txt[0], col); seg7(c, bx + cw - 18, by + 4, 12, chh - 8, txt[1], col);
