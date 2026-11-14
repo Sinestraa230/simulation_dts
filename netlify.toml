@@ -1,0 +1,14 @@
+# Site tĩnh thuần: không cần build. Netlify chỉ việc phục vụ thư mục gốc.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

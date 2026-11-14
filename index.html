@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mô phỏng sống · Mạch đèn giao thông ngã tư (Bài 11 – ĐTS)</title>
+<meta name="description" content="Sơ đồ khối sống của mạch điều khiển đèn giao thông ngã tư: bộ mô phỏng logic thực chạy trên từng chân IC.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23f28a1e%27/%3E%3Cpath d=%27M18 4L8 18h7l-1 10 10-14h-7z%27 fill=%27%231a1204%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div><h1>Mạch đèn giao thông ngã tư</h1><p>Bài 11 · Điện tử số · mô phỏng logic từng chân IC</p></div>
+    </div>
+
+    <div class="ctl-group" id="runctl">
+      <button id="btnPower" class="btn primary">▶ Bật nguồn</button>
+      <button id="btnPause" class="btn" disabled>⏸ Tạm dừng</button>
+      <div class="seg" id="speedSeg" role="group" aria-label="Tốc độ">
+        <button data-mode="real" class="on" title="1 nhịp CLK / giây">Thực 1 Hz</button>
+        <button data-mode="x4" title="4 nhịp / giây">×4</button>
+        <button data-mode="x16" title="16 nhịp / giây">×16</button>
+        <button data-mode="slow" title="Chậm: nhìn rõ độ trễ lan truyền của từng cổng">Chậm · xem trễ</button>
+        <button data-mode="step" title="Bước từng sự kiện">Từng sự kiện</button>
+      </div>
+      <button id="btnStep" class="btn" hidden>⏭ Sự kiện kế</button>
+      <button id="btnEdge" class="btn" hidden>⏭ Cạnh CLK kế</button>
+    </div>
+
+    <div class="ctl-group" id="paramctl">
+      <label class="fld">T<sub>X</sub> <input id="inTX" type="number" min="1" max="99" value="5"></label>
+      <label class="fld">T<sub>V</sub> <input id="inTV" type="number" min="1" max="9" value="2"></label>
+      <button id="btnReset" class="btn warn" title="Giữ / nhả RESET">RESET: <b>đang giữ</b></button>
+    </div>
+
+    <div class="ctl-group" id="testctl">
+      <span class="lbl">Kịch bản</span>
+      <button class="btn test" data-test="1">Test 1</button>
+      <button class="btn test" data-test="2">Test 2</button>
+      <button class="btn test" data-test="3">Test 3</button>
+      <button class="btn test" data-test="4">Test 4</button>
+      <button class="btn test" data-test="5">Test 5</button>
+    </div>
+    <div class="ctl-group right">
+      <label class="chk"><input id="chkPulse" type="checkbox" checked> Xung chạy</label>
+      <button id="btnHelp" class="btn ghost">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="circuitWrap">
+      <svg id="circuit" role="img" aria-label="Sơ đồ mạch đèn giao thông"></svg>
+
+      <div id="statusStrip">
+        <span class="chip" id="stTime">t = 0 nhịp</span>
+        <span class="chip" id="stPhase">Chưa cấp nguồn</span>
+        <span class="chip mono" id="stState">Q1Q0 = XX</span>
+        <span class="chip mono" id="stCount">HEX = XX</span>
+      </div>
+
+      <div id="zoomBar">
+        <button data-focus="">Toàn mạch</button>
+        <button data-focus="src">Nguồn</button>
+        <button data-focus="mux">Chọn thời gian</button>
+        <button data-focus="cnt">Đếm lùi</button>
+        <button data-focus="rst">RESET</button>
+        <button data-focus="sta">Trạng thái</button>
+        <button data-focus="led">Đèn</button>
+      </div>
+
+      <div id="legend">
+        <span><i style="background:#35e58a"></i>mức 1</span>
+        <span><i style="background:#445069"></i>mức 0</span>
+        <span><i class="xb" style="background:#ff4d4d"></i>X (chưa xác định)</span>
+        <span><i style="background:#ffb02e"></i>CLK</span>
+        <span><i style="background:#ff8a3d"></i>RESET</span>
+        <span><i style="background:#b57cff"></i>HET_N</span>
+        <span><i style="background:#4ea1ff"></i>bus số</span>
+      </div>
+
+      <aside id="card" hidden>
+        <button id="cardClose" aria-label="Đóng">×</button>
+        <div id="cardBody"></div>
+      </aside>
+
+      <div id="powerOverlay">
+        <div class="pw">
+          <div class="pw-ico">⏻</div>
+          <h2>Mạch đang tắt nguồn</h2>
+          <p>Mọi tín hiệu đang là <b class="x">X</b> (chưa biết). Bật nguồn để xem mạch tự thoát X nhờ RESET.</p>
+          <button id="btnPower2" class="btn primary big">▶ Bật nguồn</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="bottom">
+      <div id="timingBox" class="panel">
+        <div class="ph"><h3>Giản đồ thời gian trực tiếp</h3>
+          <div class="seg small" id="winSeg"><button data-win="10">10 nhịp</button><button data-win="20" class="on">20 nhịp</button><button data-win="40">40 nhịp</button></div>
+        </div>
+        <canvas id="timing"></canvas>
+      </div>
+
+      <div id="sideBox" class="panel">
+        <div class="ph"><h3>Ngã tư thu nhỏ</h3><span id="phaseTag" class="tag">—</span></div>
+        <div id="isecRow">
+          <svg id="isec" viewBox="0 0 360 360"></svg>
+          <div id="isecInfo">
+            <div class="big-hex" id="bigHex">--</div>
+            <div class="cap" id="bigCap">số đếm lùi</div>
+            <div id="lampText"></div>
+          </div>
+        </div>
+        <div class="ph"><h3>Chú thích trực tiếp</h3></div>
+        <ul id="captions"></ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="tip" hidden></div>
+<div id="helpModal" hidden>
+  <div class="modal">
+    <button id="helpClose" class="x" aria-label="Đóng">×</button>
+    <h2>Cách xem sơ đồ sống</h2>
+    <ul>
+      <li><b>Bật nguồn</b>: mọi dây ban đầu là <span class="redx">X</span> (chưa biết); mạch đang bị giữ RESET nên sau 2–3 nhịp tất cả về giá trị rõ ràng.</li>
+      <li><b>Màu dây</b>: xanh lá = mức 1, xám = mức 0, đỏ nhấp nháy = X. CLK màu hổ phách, RESET màu cam, HET_N màu tím, bus số màu xanh dương.</li>
+      <li><b>Chạm vào IC hoặc dây</b> để mở thẻ chi tiết (chức năng, bảng chân đang sống). Bấm vào huy hiệu tròn trên dây để xem một tín hiệu.</li>
+      <li><b>Công tắc</b> TX/TV và nút RESET ở cột trái bấm được, như trên LogicWorks. Ô T<sub>X</sub>, T<sub>V</sub> trên thanh điều khiển cũng đặt các công tắc này.</li>
+      <li><b>Chậm · xem trễ</b>: bỏ qua khoảng lặng, chỉ chạy chậm khi còn tín hiệu đang lan truyền để thấy từng cổng đổi theo độ trễ. <b>Từng sự kiện</b>: bấm để đi tới sự kiện kế tiếp.</li>
+      <li><b>Test 1–5</b> chạy lại các kịch bản kiểm thử trong báo cáo, đồng thời tự kiểm tra kết quả.</li>
+      <li>Cuộn chuột để phóng to, kéo để di chuyển, bấm đúp để về toàn mạch.</li>
+    </ul>
+  </div>
+</div>
+
+<script src="js/circuit.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/routes.js"></script>
+<script src="js/render.js"></script>
+<script src="js/timing.js"></script>
+<script src="js/intersection.js"></script>
+<script src="js/tests.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

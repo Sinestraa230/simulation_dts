@@ -1,0 +1,74 @@
+:root{
+  --bg:#0a0f1d; --panel:#111a2e; --panel2:#0e1627; --line:#22304d; --txt:#d5def2; --dim:#8b99b8; --mute:#5d6b8a;
+  --amber:#ffb02e; --green:#35e58a; --blue:#4ea1ff; --purple:#b57cff; --orange:#ff8a3d; --red:#ff4d4d; --off:#445069;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.45 "Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+code,.mono{font-family:"JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace}
+
+/* ---------- SVG sơ đồ ---------- */
+svg text{font-family:"JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace;fill:var(--txt);user-select:none}
+.frame-box{fill:rgba(20,32,58,.35);stroke:#2b3c60;stroke-width:1.2;stroke-dasharray:6 5}
+.frame-pill{fill:#0a0f1d;opacity:.88;stroke:none;pointer-events:none}
+.frame-lbl{pointer-events:none}
+.frame-title{font-size:13px;font-weight:700;fill:#9fb4e6;font-family:"Inter","Segoe UI",system-ui,sans-serif}
+.frame-sub{font-size:10.5px;fill:var(--mute);font-family:"Inter","Segoe UI",system-ui,sans-serif}
+.ic-box,.hex-box{fill:#121b33;stroke:#40527f;stroke-width:1.5}
+.comp{cursor:pointer}
+.comp:hover .ic-box,.comp:hover .hex-box,.comp:hover .gate-body{stroke:#7fa7ff}
+.comp.sel .ic-box,.comp.sel .hex-box,.comp.sel .gate-body{stroke:#ffd23a;stroke-width:2.4}
+.ic-title{font-size:13px;font-weight:700;fill:#fff}
+.ic-part{font-size:10px;fill:#8fa7dd}
+.ic-sub{font-size:9.5px;fill:var(--dim);font-family:"Inter","Segoe UI",system-ui,sans-serif}
+.ic-split{stroke:#2e3d63;stroke-width:1;stroke-dasharray:3 3}
+.pin-name{font-size:10px;fill:#c3cdec}
+.pin-num{font-size:8px;fill:#7f8db0}
+.gate-body{fill:#18244a;stroke:#5a74b8;stroke-width:1.6}
+.gate-xor{fill:none;stroke:#5a74b8;stroke-width:1.6}
+.gate-bubble{fill:#0a0f1d;stroke:#5a74b8;stroke-width:1.5}
+.gate-type{font-size:9px;fill:#9fb0dd}
+.gate-id{font-size:11px;font-weight:700;fill:#e6ecff}
+.tie{stroke:#5a6a8e;stroke-width:1.6}
+.tie-box{fill:#18233f;stroke:#4a5b82;stroke-width:1}
+.tie-box-ONE{stroke:#35e58a}.tie-box-ZERO{stroke:#5a6a8e}
+.tie-txt{font-size:7.5px;fill:#d5def2;font-weight:700}
+.open{stroke:#3a4666;stroke-width:1.4}.open-dot{fill:#3a4666}
+
+/* dây */
+.net .w{fill:none;stroke:var(--off);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.net .g{fill:none;stroke:var(--on);stroke-width:7;opacity:0;stroke-linejoin:round;pointer-events:none;filter:url(#glow)}
+.net .hit{fill:none;stroke:transparent;stroke-width:10;pointer-events:stroke;cursor:pointer}
+.net .dot{fill:var(--off)}
+.net[data-act="1"] .w{stroke:var(--on)} .net[data-act="1"] .g{opacity:.28} .net[data-act="1"] .dot{fill:var(--on)}
+.net[data-act="X"] .w{stroke:#ff4d4d;animation:xb .7s steps(2,start) infinite} .net[data-act="X"] .dot{fill:#ff4d4d}
+.net.hl .w{stroke-width:3.6;stroke:#fff}.net.hl[data-act="1"] .w{stroke:var(--on);stroke-width:4}
+@keyframes xb{50%{opacity:.25}}
+.xblink{animation:xb .7s steps(2,start) infinite}
+
+/* probe */
+.probe{cursor:pointer}
+.probe-box{fill:#0c1326;stroke:#3a4a78;stroke-width:1}
+.probe-txt{font-size:10px;fill:#e0e8ff;font-weight:600}
+.probe-dot{fill:#3b4660}
+.probe:hover .probe-box{stroke:#9bb8ff}
+
+/* LED 7 đoạn */
+.seg{fill:#241a1a;stroke:none}
+.seg.on{fill:#ff5b3a;filter:drop-shadow(0 0 4px #ff5b3a)}
+.seg.segx{fill:#ff4d4d;opacity:.5;animation:xb .7s steps(2,start) infinite}
+.hex-x{font-size:30px;fill:#ff4d4d;font-weight:700}
+/* đèn */
+.lamp-body{stroke-width:2}.lamp-txt{font-size:10px;font-weight:700;fill:#0a0f1d;paint-order:stroke;stroke:#fff;stroke-width:0}
+.lamp text.lamp-txt{fill:#e8eefc;font-size:9px}
+/* nguồn */
+.clk-icon{fill:none;stroke:var(--amber);stroke-width:2}
+.sw-label{font-size:11px;font-weight:700;fill:#cdd8f5}
+.sw-track{fill:#1a2542;stroke:#4a5b82}.sw-track.on{fill:#1f5f45;stroke:var(--green)}
+.sw-knob{fill:#cfd9f7}
+.btn-track{fill:#2b3558;stroke:#6b7aa6}.btn-track.held{fill:#5a2a1a;stroke:var(--orange)}.btn-track.rel{fill:#1f5f45;stroke:var(--green)}
+.btn-knob{fill:#e7eeff}
+.pulse{pointer-events:none;filter:drop-shadow(0 0 3px currentColor)}
+
+/* ---------- khung trang ---------- */
+#app{display:grid;grid-template-rows:auto 1fr;height:100vh}
