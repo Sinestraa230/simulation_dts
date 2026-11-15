@@ -17,6 +17,8 @@ Trang web tĩnh mô phỏng **chính mạch đã vẽ trên LogicWorks**: mỗi 
 | `js/routes.js` | Đường dây đã đi sẵn (sinh tự động, không sửa tay) |
 | `js/render.js` | Vẽ SVG: tô màu dây, xung chạy dọc dây, LED 7 đoạn, đèn, probe, zoom/kéo |
 | `js/timing.js` | Giản đồ thời gian trực tiếp (canvas) |
+| `board3d.html`, `js/board3d.js`, `js/pcb-data.js`, `tools/pcb.js`, `test/pcb-verify.js` | Bo mạch in 3D (xem mục dưới) |
+| `js/vendor/` | three.js 0.170 (MIT) |
 | `js/scene.js` | Ngã tư 2D bằng canvas: đường, nhà, cây, đèn có đếm lùi, ô tô/taxi/buýt/tải/xe máy theo mô hình bám xe, người đi bộ, ngày–chiều–đêm, mưa; đèn lấy từ mạch |
 | `js/tests.js` | Kịch bản Test 1–5 (chạy sống + tự kiểm) |
 | `js/app.js` | Ghép tất cả, điều khiển, thẻ chi tiết, chú thích |
@@ -47,3 +49,30 @@ Lưu ý khi giả định hai bộ đếm 74LS192 có độ trễ rất khác nh
 ## Chế độ xem
 
 Thanh trên cùng có 3 chế độ: **Mạch** (sơ đồ lớn, ngã tư thu nhỏ), **Mạch + Ngã tư** (hai khung cùng kích thước 50/50) và **Ngã tư** (toàn màn hình). Mở thẳng bằng `#split` hoặc `#city` sau địa chỉ trang. Trong khung ngã tư có chọn Ngày/Chiều/Đêm, mật độ xe, mưa, người đi bộ.
+
+
+## Bo mạch 3D (`board3d.html`)
+
+Trang riêng, không chạy chung với sơ đồ 2D và ngã tư để đỡ nặng máy. Mở từ nút **Bo mạch 3D ↗** trên thanh trên cùng.
+
+- Bo in 2 lớp 218 × 147 mm, linh kiện xuyên lỗ, màu linh kiện như ngoài thực tế. Xoay, dời, phóng to như trình xem 3D của KiCad; có góc nhìn trên / dưới / trước, bật tắt lớp đồng, in lụa, linh kiện.
+- Bấm vào linh kiện để xem bảng chân và net; bấm một chân hoặc chọn net để tô sáng đường đồng.
+- **Chạy thử trên bo**: bật nguồn, gạt SW3 (RESET), gạt các cần của SW1 (T_X), SW2 (T_V) ngay trên bo; LED và LED 7 đoạn sáng theo cùng engine logic.
+
+Dữ liệu bo `js/pcb-data.js` được sinh bởi `node tools/pcb.js` từ đúng `js/circuit.js`:
+
+| Sơ đồ 2D | Trên bo |
+|---|---|
+| U2, U3, U4, U5, U6, U9, U12 | giữ nguyên số chân |
+| G1 (XOR) | U7 74LS86, cổng 1 |
+| G2, G3, G4 (OR) | U13 74LS32, cổng 1–3 |
+| G5–G8 (AND) | U8 74LS08 |
+| G9 (NOR-8) | U14 CD4078B (J, chân 13) |
+| G10 (NAND) | U15 74LS00, cổng 1 |
+| HEX1, HEX2 | U10, U11 74LS247 + DS1, DS2 LED 7 đoạn anode chung |
+| CLOCK | U1 NE555 ~1 Hz |
+| TX0–7, TV0–3, SW-RESET | SW1, SW2 (DIP switch) + RN1, RN2 kéo xuống · SW3 gạt 3 chân |
+
+Cổng thừa trong IC có ngõ vào nối 0. Linh kiện thụ động thêm vào không đổi chức năng logic: tụ 100 nF cho mỗi IC, điện trở hạn dòng LED, điện trở kéo, RN3 kéo lên 8 ngõ vào CD4078B (ngõ ra 74LS ở mức 1 chỉ ~3,4 V).
+
+`node test/pcb-verify.js` kiểm tra: khoảng hở dây ≥ 0,15 mm, mỗi net liền một khối không chập, và **dựng lại mạch chỉ từ lớp đồng** rồi chạy so với mạch gốc (16 kịch bản, có RESET giữa chừng): 6 đèn và số hiển thị khớp ở mọi lần lấy mẫu.

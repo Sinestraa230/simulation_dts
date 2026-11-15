@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bo mạch 3D · Mạch đèn giao thông ngã tư (Bài 11 – ĐTS)</title>
+<meta name="description" content="Mô hình 3D bo mạch in 2 lớp của mạch đèn giao thông ngã tư, đi dây đúng netlist gốc, xoay và xem như trình xem 3D của KiCad.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%231a5e33%27/%3E%3Crect x=%279%27 y=%2710%27 width=%2714%27 height=%2712%27 rx=%271.5%27 fill=%27%23151515%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/app.css?v=6">
+<link rel="stylesheet" href="css/board3d.css?v=6">
+<script type="importmap">{ "imports": { "three": "./js/vendor/three.module.min.js" } }</script>
+</head>
+<body class="b3d">
+<header id="top">
+  <div class="brand">
+    <div class="logo pcb">▦</div>
+    <div><h1>Bo mạch 3D</h1><p>Bài 11 · PCB 2 lớp · đi dây đúng netlist của mạch gốc</p></div>
+  </div>
+  <a class="btn" href="index.html">← Mô phỏng 2D &amp; ngã tư</a>
+  <div class="ctl-group">
+    <span class="lbl">Góc nhìn</span>
+    <div class="seg" id="camSeg">
+      <button data-cam="iso" class="on">3D nghiêng</button>
+      <button data-cam="top">Mặt trên</button>
+      <button data-cam="bottom">Mặt dưới</button>
+      <button data-cam="front">Mặt trước</button>
+    </div>
+  </div>
+  <div class="ctl-group">
+    <span class="lbl">Hiện</span>
+    <label class="chk"><input type="checkbox" id="lyComp" checked> Linh kiện</label>
+    <label class="chk"><input type="checkbox" id="lyTop" checked> Đồng mặt trên</label>
+    <label class="chk"><input type="checkbox" id="lyBot" checked> Đồng mặt dưới</label>
+    <label class="chk"><input type="checkbox" id="lySilk" checked> In lụa</label>
+  </div>
+  <div class="ctl-group right">
+    <button class="btn" id="btnBom">Danh sách linh kiện</button>
+    <button class="btn ghost" id="btnHelp3">?</button>
+  </div>
+</header>
+
+<main id="stage">
+  <canvas id="gl"></canvas>
+  <div id="loading">Đang dựng bo mạch…</div>
+
+  <section id="runBox" class="box">
+    <div class="ph"><h3>Chạy thử trên bo</h3><span class="tag" id="rPhase">Tắt nguồn</span></div>
+    <div class="row">
+      <button id="rPower" class="btn primary">▶ Bật nguồn 5 V</button>
+      <div class="seg small" id="rSpeed"><button data-s="1" class="on">1 Hz</button><button data-s="4">×4</button></div>
+    </div>
+    <div class="row">
+      <button id="rReset" class="btn warn">SW3: <b>RESET</b></button>
+      <label class="fld">T<sub>X</sub> <input id="rTX" type="number" min="1" max="99" value="5"></label>
+      <label class="fld">T<sub>V</sub> <input id="rTV" type="number" min="1" max="9" value="2"></label>
+    </div>
+    <p class="note">Bấm trực tiếp vào cần gạt của SW1, SW2, SW3 trên bo để đổi. LED và LED 7 đoạn sáng theo bộ mô phỏng logic của mạch gốc.</p>
+  </section>
+
+  <section id="netBox" class="box">
+    <div class="ph"><h3>Tô sáng đường mạch</h3></div>
+    <select id="netSel"><option value="">— chọn net —</option></select>
+    <p class="note" id="netInfo">Chọn một net hoặc bấm vào một chân trong thẻ linh kiện để tô sáng đường đồng của nó.</p>
+  </section>
+
+  <aside id="info" class="box" hidden>
+    <button class="x" id="infoClose" aria-label="Đóng">×</button>
+    <div id="infoBody"></div>
+  </aside>
+
+  <aside id="bom" class="box" hidden>
+    <button class="x" id="bomClose" aria-label="Đóng">×</button>
+    <div id="bomBody"></div>
+  </aside>
+
+  <div id="tip3" hidden></div>
+  <div id="hint">Kéo chuột trái: xoay · chuột phải / Shift + kéo: dời · cuộn: phóng to · bấm vào linh kiện để xem chi tiết</div>
+</main>
+
+<div id="helpModal" hidden>
+  <div class="modal">
+    <button id="helpClose" class="x" aria-label="Đóng">×</button>
+    <h2>Về bo mạch 3D</h2>
+    <ul>
+      <li>Bo 2 lớp 218 × 147 mm, linh kiện xuyên lỗ. Dây đỏ nhạt dưới lớp phủ xanh là đồng mặt trên, xem mặt dưới để thấy đồng mặt dưới.</li>
+      <li>Dây nối được sinh tự động từ <b>đúng netlist</b> của sơ đồ 2D (js/circuit.js). Bộ kiểm tra <code>test/pcb-verify.js</code> dò lại lớp đồng, dựng lại mạch chỉ từ đồng rồi chạy so với mạch gốc: 6 đèn và số hiển thị khớp ở mọi nhịp.</li>
+      <li>Các cổng G1–G10 của sơ đồ được đặt vào IC cổng chuẩn: G1 → U7 74LS86, G2–G4 → U13 74LS32, G5–G8 → U8 74LS08, G9 → U14 CD4078B, G10 → U15 74LS00. HEX → 74LS247 + LED 7 đoạn, CLOCK → NE555.</li>
+      <li>Linh kiện thụ động (điện trở, tụ, công tắc) chỉ phục vụ cấp nguồn, hạn dòng và tạo mức logic, không đổi chức năng mạch.</li>
+    </ul>
+  </div>
+</div>
+
+<script src="js/circuit.js?v=6"></script>
+<script src="js/engine.js?v=6"></script>
+<script src="js/pcb-data.js?v=6"></script>
+<script type="module" src="js/board3d.js?v=6"></script>
+</body>
+</html>

@@ -107,3 +107,4 @@ main.view-city{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1
 main.view-circuit{grid-template-rows:minmax(340px,60vh) auto}
 main.view-split{grid-template-columns:1fr;grid-template-rows:minmax(320px,50vh) minmax(320px,50vh) auto;grid-template-areas:"c" "s" "b"}
 main.view-city{grid-template-rows:minmax(420px,70vh) auto}}
+#lnk3d{text-decoration:none;color:var(--txt);border-color:#2f6b45;background:#13301f}#lnk3d:hover{background:#1a4229}
