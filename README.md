@@ -57,7 +57,7 @@ Trang riêng, không chạy chung với sơ đồ 2D và ngã tư để đỡ n�
 
 - Bo in 2 lớp 218 × 147 mm, linh kiện xuyên lỗ, màu linh kiện như ngoài thực tế. Xoay, dời, phóng to như trình xem 3D của KiCad; có góc nhìn trên / dưới / trước, bật tắt lớp đồng, in lụa, linh kiện.
 - Bấm vào linh kiện để xem bảng chân và net; bấm một chân hoặc chọn net để tô sáng đường đồng.
-- **Chạy thử trên bo**: bật nguồn, gạt SW3 (RESET), gạt các cần của SW1 (T_X), SW2 (T_V) ngay trên bo; LED và LED 7 đoạn sáng theo cùng engine logic.
+- **Chạy thử trên bo**: bật nguồn (SW4 tự về RESET), gạt SW4 sang CHẠY, gạt các cần của SW1, SW2 (T_X), SW3 (T_V) ngay trên bo; tốc độ 1 Hz, ×4, ×16; LED và LED 7 đoạn sáng theo cùng engine logic.
 
 Dữ liệu bo `js/pcb-data.js` được sinh bởi `node tools/pcb.js` từ đúng `js/circuit.js`:
 
@@ -71,7 +71,9 @@ Dữ liệu bo `js/pcb-data.js` được sinh bởi `node tools/pcb.js` từ đ�
 | G10 (NAND) | U15 74LS00, cổng 1 |
 | HEX1, HEX2 | U10, U11 74LS247 + DS1, DS2 LED 7 đoạn anode chung |
 | CLOCK | U1 NE555, R1 = 10 kΩ, R2 = 68 kΩ, C1 = 10 µF (~0,99 Hz) |
-| TX0–7, TV0–3, SW-RESET | SW1, SW2 (DIP switch) + RN1, RN2 kéo xuống · SW3 gạt 3 chân |
+| TX0–3, TX4–7, TV0–3 | SW1, SW2, SW3 (DIP switch 4 vị trí) + RN1–RN3 (4 × 1 kΩ) kéo xuống |
+| SW-RESET | SW4 công tắc gạt nối RST_N xuống GND + R23 10 kΩ kéo lên (báo cáo dùng nút nhấn, cùng mức logic) |
+| 6 đầu dò đèn | U13 74LS04 lái hút dòng (Bảng B.1) + 6 LED 5 mm, anode qua 330 Ω lên VCC |
 
 Cổng thừa trong IC có ngõ vào nối 0. Linh kiện thụ động thêm vào không đổi chức năng logic: tụ 100 nF cho mỗi IC, điện trở hạn dòng LED, điện trở kéo, RN4 kéo lên 8 ngõ vào CD4078B (ngõ ra 74LS ở mức 1 chỉ ~3,4 V).
 
