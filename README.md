@@ -65,14 +65,16 @@ Dữ liệu bo `js/pcb-data.js` được sinh bởi `node tools/pcb.js` từ đ�
 |---|---|
 | U2, U3, U4, U5, U6, U9, U12 | giữ nguyên số chân |
 | G1 (XOR) | U7 74LS86, cổng 1 |
-| G2, G3, G4 (OR) | U13 74LS32, cổng 1–3 |
+| G2, G3, G4 (OR) | U16 74LS32, cổng 1–3 |
 | G5–G8 (AND) | U8 74LS08 |
 | G9 (NOR-8) | U14 CD4078B (J, chân 13) |
 | G10 (NAND) | U15 74LS00, cổng 1 |
 | HEX1, HEX2 | U10, U11 74LS247 + DS1, DS2 LED 7 đoạn anode chung |
-| CLOCK | U1 NE555 ~1 Hz |
+| CLOCK | U1 NE555, R1 = 10 kΩ, R2 = 68 kΩ, C1 = 10 µF (~0,99 Hz) |
 | TX0–7, TV0–3, SW-RESET | SW1, SW2 (DIP switch) + RN1, RN2 kéo xuống · SW3 gạt 3 chân |
 
-Cổng thừa trong IC có ngõ vào nối 0. Linh kiện thụ động thêm vào không đổi chức năng logic: tụ 100 nF cho mỗi IC, điện trở hạn dòng LED, điện trở kéo, RN3 kéo lên 8 ngõ vào CD4078B (ngõ ra 74LS ở mức 1 chỉ ~3,4 V).
+Cổng thừa trong IC có ngõ vào nối 0. Linh kiện thụ động thêm vào không đổi chức năng logic: tụ 100 nF cho mỗi IC, điện trở hạn dòng LED, điện trở kéo, RN4 kéo lên 8 ngõ vào CD4078B (ngõ ra 74LS ở mức 1 chỉ ~3,4 V).
 
 `node test/pcb-verify.js` kiểm tra: khoảng hở dây ≥ 0,15 mm, mỗi net liền một khối không chập, và **dựng lại mạch chỉ từ lớp đồng** rồi chạy so với mạch gốc (16 kịch bản, có RESET giữa chừng): 6 đèn và số hiển thị khớp ở mọi lần lấy mẫu.
+
+Bo khớp Bảng A.1 (linh kiện) và B.1 (nối chân) của báo cáo; khác duy nhất là RESET dùng công tắc gạt thay nút nhấn để dễ thao tác. Bật nguồn trên trang 3D thì SW4 tự về RESET.

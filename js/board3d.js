@@ -111,7 +111,7 @@ function silkTop(c) {
       case 'DIPSW8': case 'DIPSW4': {
         R(x0 - 1.6, y0 - 1.2, x1 - x0 + 3.2, y1 - y0 + 2.4);
         text(c, comp.ref, x0 - 1.6, y0 - 2.4, 1.5, 'left', 0, true); text(c, 'ON ▲', x1 + 0.4, y0 - 2.4, 1.2, 'right', 0, true);
-        const n = comp.pins.length / 2; for (let i = 0; i < n; i++) text(c, comp.ref === 'SW1' ? 'TX' + i : 'TV' + i, x0 + i * 2.54, y1 + 2.1, 0.95, 'center');
+        const n = comp.pins.length / 2; for (let i = 0; i < n; i++) text(c, comp.bits[i], x0 + i * 2.54, y1 + 2.1, 0.95, 'center');
         break;
       }
       case 'AXIAL_V': R(x0 - 1.4, y0 + 1.9, 2.8, y1 - y0 - 3.8); text(c, comp.ref, x0, y0 - 1.6, 1.0, 'center'); break;
@@ -125,7 +125,7 @@ function silkTop(c) {
       }
       case 'LED5': { const cx = (x0 + x1) / 2; c.beginPath(); c.arc(cx, y0, 2.9, 0.35, 2 * Math.PI - 0.35); c.stroke(); c.beginPath(); c.moveTo(cx + 2.9 * Math.cos(0.35), y0 - 2.9 * Math.sin(0.35)); c.lineTo(cx + 2.9 * Math.cos(0.35), y0 + 2.9 * Math.sin(0.35)); c.stroke(); text(c, comp.ref, cx, y0 + 4, 1.2, 'center', 0, true); break; }
       case 'SEG7': R(x0 - 1.2, y0 - 1.9, x1 - x0 + 2.4, y1 - y0 + 3.8); text(c, comp.ref, (x0 + x1) / 2, y1 + 3.0, 1.4, 'center', 0, true); break;
-      case 'SIP9': case 'SIP5': R(x0 - 1.2, y0 - 1.25, x1 - x0 + 2.4, 2.5); c.fillRect(x0 - 1.2, y0 - 1.25, 0.6, 2.5); text(c, comp.ref, x0 - 1.8, y0, 1.2, 'right', 0, true); break;
+      case 'SIP9': case 'SIP5': R(x0 - 1.2, y0 - 1.25, x1 - x0 + 2.4, 2.5); c.fillRect(x0 - 1.2, y0 - 1.25, 0.6, 2.5); text(c, comp.ref, x1 + 1.8, y0, 1.2, 'left', 0, true); break;
       case 'SIP9_V': R(x0 - 1.25, y0 - 1.2, 2.5, y1 - y0 + 2.4); c.fillRect(x0 - 1.25, y0 - 1.2, 2.5, 0.6); text(c, comp.ref, x0, y0 - 2.2, 1.2, 'center', 0, true); break;
       case 'SLIDE': R(x0 - 1.8, y0 - 1.8, x1 - x0 + 3.6, 3.6); text(c, comp.ref, (x0 + x1) / 2, y0 - 3, 1.3, 'center', 0, true); text(c, 'RESET', x0 - 0.8, y0 + 3.2, 1.05, 'center', 0, true); text(c, 'CHẠY', x1 + 0.8, y0 + 3.2, 1.05, 'center', 0, true); break;
       case 'TERM2': R(x0 - 2.6, y0 - 3.8, x1 - x0 + 5.2, 7.6); text(c, comp.ref, (x0 + x1) / 2, y0 + 5.2, 1.3, 'center', 0, true); text(c, '+5V', x0, y0 - 5, 1.1, 'center', 0, true); text(c, 'GND', x1, y0 - 5, 1.1, 'center', 0, true); break;
@@ -373,11 +373,11 @@ addEventListener('resize', resize);
 const camAnim = { t: 1 };
 function setCam(kind) {
   document.querySelectorAll('#camSeg button').forEach(b => b.classList.toggle('on', b.dataset.cam === kind));
-  const fitD = Math.max(BW / camera.aspect, BH) * 1.25 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / 2 + 20;
+  const fitD = Math.max(BW / camera.aspect, BH) * (camera.aspect < 1 ? 1.5 : 1.25) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / 2 + 20;
   const P0 = { iso: [-0.34, 0.78, 0.53], top: [0, 1, 0.012], bottom: [0, -1, -0.012], front: [0, 0.32, 1] }[kind];
   const d = kind === 'iso' ? fitD * 0.95 : kind === 'front' ? fitD * 1.05 : fitD;
   const to = V3(...P0).normalize().multiplyScalar(d);
-  Object.assign(camAnim, { t: 0, t0: 0, fromP: camera.position.clone(), toP: to, fromT: controls.target.clone(), toT: V3(0, kind === 'front' ? 6 : 0, 0), up: kind === 'bottom' ? V3(0, 1, 0) : V3(0, 1, 0) });
+  Object.assign(camAnim, { t: 0, t0: 0, fromP: camera.position.clone(), toP: to, fromT: controls.target.clone(), toT: V3(kind === 'iso' && camera.aspect > 1.2 ? -BW * 0.09 : 0, kind === 'front' ? 6 : 0, kind === 'iso' && camera.aspect > 1.2 ? BH * 0.06 : 0), up: kind === 'bottom' ? V3(0, 1, 0) : V3(0, 1, 0) });
   redraw();
 }
 document.querySelectorAll('#camSeg button').forEach(b => (b.onclick = () => setCam(b.dataset.cam)));
@@ -391,7 +391,7 @@ $('lySilk').onchange = e => { layers.silk = e.target.checked; drawBoard(); };
 /* ---------------- net ---------------- */
 const NETS = [...new Set(PCB.traces.map(t => t.net))].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 const netSel = $('netSel'); NETS.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; netSel.appendChild(o); });
-const netInfo = n => (CIRCUIT.NET_INFO[n] || (n === 'VCC' ? 'Nguồn +5 V' : n === 'GND' ? 'Mass 0 V' : /^TX\d/.test(n) ? 'Bit T_X' : /^TV\d/.test(n) ? 'Bit T_V' : /^N[UC]\d/.test(n) ? 'Số nạp từ bộ chọn' : /^C[UC]\d/.test(n) ? 'Bit số đang đếm' : /_A$/.test(n) ? 'Anode LED' : /^DS\d_/.test(n) ? 'Đoạn LED 7 đoạn' : /^U1[01]_/.test(n) ? 'Ngõ ra 74LS247 → điện trở' : /555$/.test(n) ? 'Mạch dao động NE555' : ''));
+const netInfo = n => (CIRCUIT.NET_INFO[n] || (n === 'VCC' ? 'Nguồn +5 V' : n === 'GND' ? 'Mass 0 V' : /^TX\d/.test(n) ? 'Bit T_X' : /^TV\d/.test(n) ? 'Bit T_V' : /^N[UC]\d/.test(n) ? 'Số nạp từ bộ chọn' : /^C[UC]\d/.test(n) ? 'Bit số đang đếm' : /_A$/.test(n) ? 'Anode LED' : /_K$/.test(n) ? 'Cathode LED ← ngõ ra U13' : /^DS\d_/.test(n) ? 'Đoạn LED 7 đoạn' : /^U1[01]_/.test(n) ? 'Ngõ ra 74LS247 → điện trở' : /555$/.test(n) ? 'Mạch dao động NE555' : ''));
 function highlight(n) {
   hiNet = n || null; netSel.value = hiNet || ''; drawBoard();
   if (!hiNet) { $('netInfo').textContent = 'Chọn một net hoặc bấm vào một chân trong thẻ linh kiện để tô sáng đường đồng của nó.'; return; }
@@ -414,8 +414,17 @@ const PINNAMES = {
   'NE555': ['GND', 'TRIG', 'OUT', 'RESET', 'CTRL', 'THR', 'DIS', 'VCC'],
   SEG7: ['e', 'd', 'CA', 'c', 'DP', 'b', 'a', 'CA', 'f', 'g']
 };
-const pinName = (c, n) => { const k = ['74LS08', '74LS32', '74LS86', '74LS00'].includes(c.part) ? 'quad' : c.fp === 'SEG7' ? 'SEG7' : c.part; const a = PINNAMES[k]; return a ? a[n - 1] : (c.role === 'dipsw' ? (n <= c.pins.length / 2 ? 'vị trí ' + n : 'chung') : c.role === 'rnet' ? (n === 1 ? 'chung' : 'R' + (n - 1)) : c.role === 'led' ? (n === 1 ? 'anode' : 'cathode') : c.role === 'ecap' ? (n === 1 ? '+' : '−') : c.role === 'slide' ? ['RESET', 'chung', 'CHẠY'][n - 1] : c.role === 'term' ? ['+5V', 'GND'][n - 1] : ''); };
-function lv(n) { if (!SIM.on || !n) return ''; const v = n === 'VCC' ? 1 : n === 'GND' ? 0 : SIM.sim.get(n); return `<span class="lv lv${v}">${v}</span>`; }
+const pinName = (c, n) => { const k = ['74LS08', '74LS32', '74LS86', '74LS00'].includes(c.part) ? 'quad' : c.fp === 'SEG7' ? 'SEG7' : c.part; const a = PINNAMES[k]; return a ? a[n - 1] : (c.role === 'dipsw' ? (n <= c.pins.length / 2 ? 'vị trí ' + n : 'chung') : c.role === 'rnet' ? (n === 1 ? 'chung' : 'R' + (n - 1)) : c.role === 'led' ? (n === 1 ? 'anode' : 'cathode') : c.role === 'ecap' ? (n === 1 ? '+' : '−') : c.role === 'slide' ? ['GND (RESET)', 'RST_N', 'không nối'][n - 1] : c.role === 'term' ? ['+5V', 'GND'][n - 1] : ''); };
+// mức logic của một net trên bo: net của mạch gốc lấy từ engine; cathode LED = ngõ ra cổng đảo U13; net tương tự (NE555, đoạn LED, anode) để trống
+const CATHODE = {}; for (const c of PCB.comps) if (c.role === 'led') CATHODE[c.pins.find(p => p.n === 2).net] = c.from;
+function lv(n) {
+  if (!SIM.on || !n) return '';
+  let v;
+  if (n === 'VCC') v = 1; else if (n === 'GND') v = 0;
+  else if (CATHODE[n]) { const L = SIM.sim.lights(), x = L[CATHODE[n].slice(1)]; v = x === 'X' ? 'X' : 1 - x; }
+  else if (n in SIM.sim.net) v = SIM.sim.get(n); else return '<span class="lv" title="tín hiệu tương tự">~</span>';
+  return `<span class="lv lv${v}">${v}</span>`;
+}
 function openInfo(ref) {
   const c = byRef[ref]; selRef = ref; drawBoard(); $('bom').hidden = true;
   const gates = c.gates ? Object.entries(c.gates).map(([g, pp]) => { const cg = CIRCUIT.COMPONENTS.find(k => k.id === g); return `<b>${g}</b> (chân ${pp.join(', ')}): ${cg.ins.join(', ')} → ${cg.out}`; }).join('<br>') : '';
@@ -470,21 +479,22 @@ function newSim() { const s = new LE.Sim(CIRCUIT); s.setSwitchValue('TX', clampI
 function clampIn(el, a, b) { const v = Math.max(a, Math.min(b, +el.value || a)); el.value = v; return v; }
 function syncSwitches() {
   const s = SIM.sim;
-  for (const [ref, grp, n] of [['SW1', 'TX', 8], ['SW2', 'TV', 4]]) byRef[ref].levers.forEach((lv, i) => { lv.position.z = lv.position.z; lv.userData.base = lv.userData.base ?? lv.position.z; lv.position.z = lv.userData.base + (s.sw[grp + i] ? -2.6 : 0); });
-  const k = byRef.SW3; k.knob.position.x = k.knobX + (s.resetHeld ? -1.7 : 1.7);
+  for (const ref of ['SW1', 'SW2', 'SW3']) byRef[ref].levers.forEach((lv, i) => { lv.position.z = lv.position.z; lv.userData.base = lv.userData.base ?? lv.position.z; lv.position.z = lv.userData.base + (s.sw[byRef[ref].bits[i]] ? -2.6 : 0); });
+  const k = byRef.SW4; k.knob.position.x = k.knobX + (s.resetHeld ? -1.7 : 1.7);
   const b = $('rReset'); b.querySelector('b').textContent = s.resetHeld ? 'RESET' : 'CHẠY'; b.classList.toggle('rel', !s.resetHeld);
   if (document.activeElement !== $('rTX')) $('rTX').value = s.getSwitchValue('TX'); if (document.activeElement !== $('rTV')) $('rTV').value = s.getSwitchValue('TV');
   redraw();
 }
-function toggleSw(comp, i) { const grp = comp.ref === 'SW1' ? 'TX' : 'TV'; SIM.sim.setSwitch(grp + i, 1 - SIM.sim.sw[grp + i]); syncSwitches(); }
+function toggleSw(comp, i) { const b = comp.bits[i]; SIM.sim.setSwitch(b, 1 - SIM.sim.sw[b]); syncSwitches(); }
 function setReset(h) { SIM.sim.setReset(h); syncSwitches(); }
+$('runToggle').onclick = () => { const c = $('runBox').classList.toggle('mini'); $('runToggle').textContent = c ? '▴' : '▾'; };
 $('rReset').onclick = () => setReset(!SIM.sim.resetHeld);
 $('rTX').onchange = () => { SIM.sim.setSwitchValue('TX', clampIn($('rTX'), 1, 99)); syncSwitches(); };
 $('rTV').onchange = () => { SIM.sim.setSwitchValue('TV', clampIn($('rTV'), 1, 9)); syncSwitches(); };
 document.querySelectorAll('#rSpeed button').forEach(b => (b.onclick = () => { SIM.speed = +b.dataset.s; document.querySelectorAll('#rSpeed button').forEach(x => x.classList.toggle('on', x === b)); }));
 $('rPower').onclick = () => {
   SIM.on = !SIM.on;
-  if (SIM.on) { const held = SIM.sim.resetHeld, sw = { ...SIM.sim.sw }; newSim(); for (const k in sw) SIM.sim.setSwitch(k, sw[k]); SIM.sim.setReset(held); SIM.sim.startClock(); syncSwitches(); }
+  if (SIM.on) { const sw = { ...SIM.sim.sw }; newSim(); for (const k in sw) SIM.sim.setSwitch(k, sw[k]); SIM.sim.setReset(true); SIM.sim.startClock(); syncSwitches(); }   // bật nguồn: SW4 tự về RESET, như mạch thật cần reset khi cấp điện
   $('rPower').textContent = SIM.on ? '⏻ Tắt nguồn' : '▶ Bật nguồn 5 V'; $('rPower').classList.toggle('primary', !SIM.on);
   updateLights(true);
 };
@@ -497,7 +507,7 @@ function updateLights(force) {
   for (const c of PCB.comps) if (c.led) { const v = on && val[c.from] === 1; c.led.mat.emissiveIntensity = v ? 0.75 : 0; c.led.mat.opacity = v ? 0.98 : 0.9; c.led.glow.material.opacity = v ? 0.6 : 0; }
   for (const [ref, nib] of [['DS1', u], ['DS2', t]]) { const c = byRef[ref], segs = on && nib !== 'X' && nib <= 9 ? SEGS[nib] : ''; if (segs !== c.seg.on) { c.seg.on = segs; drawSeg(c, segs); } c.seg.mat.emissiveIntensity = segs ? 1.6 : 0; }
   const st = s.state();
-  $('rPhase').textContent = !on ? 'Tắt nguồn' : st.includes('X') ? (s.resetHeld ? 'Đang thoát X…' : 'Còn X: gạt SW3 về RESET')  : (s.get('RST_N') === 0 || s.get('RSY') === 1) ? 'RESET · A:Đ · B:V' : PH[st];
+  $('rPhase').textContent = !on ? 'Tắt nguồn' : st.includes('X') ? (s.resetHeld ? 'Đang thoát X…' : 'Còn X: gạt SW4 về RESET')  : (s.get('RST_N') === 0 || s.get('RSY') === 1) ? (s.resetHeld ? 'RESET · A:Đ · B:V · gạt SW4 sang CHẠY' : 'RESET · A:Đ · B:V') : PH[st];
   redraw();
 }
 

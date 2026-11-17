@@ -71,9 +71,8 @@ const C = {}; for (const c of PCB.comps) C[c.ref] = c;
 const pin = (ref, n) => C[ref].pins.find(p => p.n === n);
 const gname = {};            // nhóm → tên; chỉ đặt tên theo VỊ TRÍ VẬT LÝ (không dùng tên net trong dữ liệu)
 const nameG = (ref, n, nm) => { gname[grp(pin(ref, n))] = nm; };
-nameG('J1', 1, 'ONE'); nameG('J1', 2, 'ZERO'); nameG('U1', 3, 'CLK'); nameG('SW3', 2, 'RST_N');
-for (let k = 1; k <= 8; k++) nameG('SW1', k, 'TX' + (k - 1));
-for (let k = 1; k <= 4; k++) nameG('SW2', k, 'TV' + (k - 1));
+nameG('J1', 1, 'ONE'); nameG('J1', 2, 'ZERO'); nameG('U1', 3, 'CLK'); nameG('SW4', 2, 'RST_N');
+for (let k = 1; k <= 4; k++) { nameG('SW1', k, 'TX' + (k - 1)); nameG('SW2', k, 'TX' + (k + 3)); nameG('SW3', k, 'TV' + (k - 1)); }
 let gi = 0; const G = (ref, n) => { const g = grp(pin(ref, n)); return gname[g] || (gname[g] = 'g' + gi++); };
 const P = (name, num, ref, side, extra) => Object.assign({ name, num, net: G(ref, num), side }, extra || {});
 const parts = PCB.comps.filter(c => c.role === 'ic');
@@ -100,17 +99,15 @@ for (const c of parts) {
 }
 const BOARD = { COMPONENTS: BC };
 // đọc đèn: LED ← điện trở ← nhóm logic
+// đọc đèn: LED sáng khi cathode bị kéo xuống 0 (hút dòng qua U13); anode qua điện trở lên VCC
 const lampG = {};
-for (const d of PCB.comps.filter(c => c.role === 'led')) {
-  const ga = grp(pin(d.ref, 1)), R = PCB.comps.find(c => c.role === 'res' && c.pins.some(p => grp(p) === ga));
-  const other = R.pins.find(p => grp(p) !== ga); lampG[d.from] = gname[grp(other)] || G(R.ref, other.n);
-}
+for (const d of PCB.comps.filter(c => c.role === 'led')) lampG[d.from] = G(d.ref, 2);
 // đọc số hiển thị: ngõ vào A,B,C,D (7,1,2,6) của 74LS247 cấp cho LED 7 đoạn bên trái (chục) và bên phải (đơn vị)
 const disps = PCB.comps.filter(c => c.role === 'disp').sort((a, b) => a.x - b.x);
 const decOf = d => { const g = grp(pin(d.ref, 7)); const R = PCB.comps.find(c => c.role === 'res' && c.pins.some(p => grp(p) === g)); const o = R.pins.find(p => grp(p) !== g); return PCB.comps.find(c => c.part === '74LS247' && c.pins.some(p => p.n === 13 && grp(p) === grp(o))); };
 const decT = decOf(disps[0]), decU = decOf(disps[1]);
 const bcd = (sim, dec) => { const b = [7, 1, 2, 6].map(n => sim.get(G(dec.ref, n))); return b.includes('X') ? 'X' : b.reduce((s, v, i) => s + (v << i), 0); };
-const readBoard = s => ({ L: ['LXA', 'LVA', 'LDA', 'LXB', 'LVB', 'LDB'].map(k => s.get(lampG[k])).join(''), H: `${bcd(s, decT)}${bcd(s, decU)}` });
+const readBoard = s => ({ L: ['LXA', 'LVA', 'LDA', 'LXB', 'LVB', 'LDB'].map(k => { const v = s.get(lampG[k]); return v === 'X' ? 'X' : 1 - v; }).join(''), H: `${bcd(s, decT)}${bcd(s, decU)}` });
 const readOrig = s => { const L = s.lights(); return { L: [L.XA, L.VA, L.DA, L.XB, L.VB, L.DB].join(''), H: (() => { const u = s.nibble('CU'), c = s.nibble('CC'); return `${c}${u}`; })() }; };
 
 let cmpBad = 0, samples = 0;
@@ -146,12 +143,13 @@ ok(PCB.comps.filter(c => c.value === '104').every(c => isV(c.ref, 1) && isG(c.re
 const res = ref => C[ref];
 ok(isV('U1', 4) && same('U1', 2, 'U1', 6) && same('R1', 1, 'U1', 7) && isV('R1', 2) && same('R2', 2, 'U1', 7) && same('R2', 1, 'U1', 6) && same('C1', 1, 'U1', 6) && isG('C1', 2) && same('C2', 1, 'U1', 5) && isG('C2', 2), 'NE555 không đúng mạch dao động');
 // công tắc
-for (let k = 1; k <= 8; k++) ok(isV('SW1', 17 - k) && same('RN1', k + 1, 'SW1', k), 'SW1 vị trí ' + k);
-for (let k = 1; k <= 4; k++) ok(isV('SW2', 9 - k) && same('RN2', k + 1, 'SW2', k), 'SW2 vị trí ' + k);
-ok(isG('RN1', 1) && isG('RN2', 1) && isV('RN3', 1), 'chân chung điện trở mạng');
-ok(isG('SW3', 1) && isV('SW3', 3), 'SW3 RESET');
+for (const sw of ['SW1', 'SW2', 'SW3']) for (let k = 1; k <= 4; k++) ok(isV(sw, 9 - k) && same('RN' + sw[2], k + 1, sw, k), sw + ' vị trí ' + k);
+ok(isG('RN1', 1) && isG('RN2', 1) && isG('RN3', 1) && isV('RN4', 1), 'chân chung điện trở mạng');
+ok(['RN1', 'RN2', 'RN3'].every(r => C[r].value === 'A102J'), 'kéo xuống 1 kΩ');
+ok(isG('SW4', 1) && !pin('SW4', 3).net && same('R23', 1, 'SW4', 2) && isV('R23', 2) && C.R23.value === '10k', 'SW4 RESET + R23 10 kΩ kéo lên');
+ok(C.R1.value === '10k' && C.R2.value === '68k', 'R1 = 10 kΩ, R2 = 68 kΩ');
 // kéo lên đúng 8 ngõ vào CD4078B
-ok([2, 3, 4, 5, 6, 7, 8, 9].every(k => [2, 3, 4, 5, 9, 10, 11, 12].some(n => same('RN3', k, 'U14', n))), 'RN3 kéo lên');
+ok([2, 3, 4, 5, 6, 7, 8, 9].every(k => [2, 3, 4, 5, 9, 10, 11, 12].some(n => same('RN4', k, 'U14', n))), 'RN4 kéo lên');
 // 74LS247 → điện trở → đúng đoạn
 const SEG247 = { a: 13, b: 12, c: 11, d: 10, e: 9, f: 15, g: 14 }, SEG7 = { a: 7, b: 6, c: 4, d: 2, e: 1, f: 9, g: 10 };
 for (const [disp, dec] of [[disps[0], decT], [disps[1], decU]]) {
@@ -159,10 +157,15 @@ for (const [disp, dec] of [[disps[0], decT], [disps[1], decU]]) {
   for (const s in SEG247) { const R = PCB.comps.find(c => c.role === 'res' && c.pins.some(p => grp(p) === grp(pin(dec.ref, SEG247[s])))); ok(R && R.pins.some(p => grp(p) === grp(pin(disp.ref, SEG7[s]))), `${dec.ref} đoạn ${s} → ${disp.ref}`); }
 }
 ok(decT.pins.find(p => p.n === 7) && decT !== decU, 'hai bộ giải mã');
-// LED: catốt về GND
-for (const d of PCB.comps.filter(c => c.role === 'led')) ok(isG(d.ref, 2), d.ref + ' catốt');
+// LED: anode qua 330 Ω lên VCC, cathode vào ngõ ra U13 đúng Bảng B.1
+const U13OUT = { LXA: [1, 2], LVA: [3, 4], LDA: [5, 6], LXB: [9, 8], LVB: [11, 10], LDB: [13, 12] };
+for (const d of PCB.comps.filter(c => c.role === 'led')) {
+  const R = PCB.comps.find(c => c.role === 'res' && c.pins.some(p => grp(p) === grp(pin(d.ref, 1))));
+  ok(R && R.value === '330' && R.pins.some(p => grp(p) === VCC), d.ref + ' anode qua 330 Ω lên VCC');
+  ok(same(d.ref, 2, 'U13', U13OUT[d.from][1]), d.ref + ' cathode ← U13 chân ' + U13OUT[d.from][1]);
+}
 // không IC nào ngoài danh sách
-const IC_LIST = ['U1 NE555', 'U2 74LS192', 'U3 74LS192', 'U4 74LS157', 'U5 74LS157', 'U6 74LS74', 'U7 74LS86', 'U8 74LS08', 'U9 74LS04', 'U10 74LS247', 'U11 74LS247', 'U12 74LS74', 'U13 74LS32', 'U14 CD4078B', 'U15 74LS00'];
+const IC_LIST = ['U1 NE555', 'U2 74LS192', 'U3 74LS192', 'U4 74LS157', 'U5 74LS157', 'U6 74LS74', 'U7 74LS86', 'U8 74LS08', 'U9 74LS04', 'U10 74LS247', 'U11 74LS247', 'U12 74LS74', 'U13 74LS04', 'U16 74LS32', 'U14 CD4078B', 'U15 74LS00'];
 ok(parts.map(c => c.ref + ' ' + c.part).sort().join() === IC_LIST.sort().join(), 'danh sách IC');
 console.log(`  ${fails ? '' : '✓ '}nguồn, tụ lọc, NE555, công tắc + kéo xuống, kéo lên CD4078B, 247 → đoạn LED, LED đèn`);
 

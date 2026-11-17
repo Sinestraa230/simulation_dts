@@ -52,7 +52,7 @@ function quad(ref, part, x, y, gates, vn) {
   return c;
 }
 quad('U7', '74LS86', 53, 54, ['G1'], 'XOR 4 cổng — dùng 1 cổng cho G1: X01 = Q1 ⊕ Q0.');
-quad('U13', '74LS32', 64, 31, ['G2', 'G3', 'G4'], 'OR 4 cổng — G2: D0 = Q0_N + RSY · G3: D1 = X01 + RSY · G4: MEN = RST + RSY.');
+quad('U16', '74LS32', 64, 31, ['G2', 'G3', 'G4'], 'OR 4 cổng — G2: D0 = Q0_N + RSY · G3: D1 = X01 + RSY · G4: MEN = RST + RSY.');
 quad('U8', '74LS08', 64, 54, ['G5', 'G6', 'G7', 'G8'], 'AND 4 cổng — G5 XA · G6 VA · G7 XB · G8 VB (giải mã pha ra đèn).');
 quad('U15', '74LS00', 42, 43, ['G10'], 'NAND 4 cổng — dùng 1 cổng cho G10: HET_N = NAND(Z, CLK).');
 { // G9 NOR-8 → CD4078B: A–D = chân 2–5, E–H = chân 9–12, NOR (J) = chân 13, OR (K) = chân 1 để hở, 6 và 8 NC
@@ -82,46 +82,56 @@ decoder('U10', 'DS1', 'HEX1', 53, 23, 55, 12, 54);
 
 // --- nguồn xung CLK: NE555 dao động ~1 Hz
 add({ ref: 'U1', part: 'NE555', fp: 'DIP8', x: 10, y: 12, pins: { 1: 'GND', 2: 'T555', 3: 'CLK', 4: 'VCC', 5: 'C555', 6: 'T555', 7: 'D555', 8: 'VCC' }, role: 'ic', from: 'CLOCK',
-  vn: 'Tạo xung CLK ~1 Hz (mạch dao động bất ổn): f ≈ 1,44 / ((R1 + 2·R2)·C1) = 1,44 / (137 kΩ · 10 µF) ≈ 1,05 Hz.' });
-add({ ref: 'R1', part: 'Điện trở 1 kΩ', value: '1k', fp: 'AXIAL_V', x: 15, y: 12, pins: { 1: 'D555', 2: 'VCC' }, role: 'res', vn: 'R_A của NE555.' });
+  vn: 'Tạo xung CLK ~1 Hz (mạch dao động bất ổn): f ≈ 1,44 / ((R1 + 2·R2)·C1) = 1,44 / (146 kΩ · 10 µF) ≈ 0,99 Hz.' });
+add({ ref: 'R1', part: 'Điện trở 10 kΩ', value: '10k', fp: 'AXIAL_V', x: 15, y: 12, pins: { 1: 'D555', 2: 'VCC' }, role: 'res', vn: 'R_A của NE555.' });
 add({ ref: 'R2', part: 'Điện trở 68 kΩ', value: '68k', fp: 'AXIAL_V', x: 17, y: 12, pins: { 1: 'T555', 2: 'D555' }, role: 'res', vn: 'R_B của NE555.' });
 add({ ref: 'C1', part: 'Tụ hóa 10 µF', value: '10µ', fp: 'RADIAL', x: 13, y: 16, pins: { 1: 'T555', 2: 'GND' }, role: 'ecap', vn: 'Tụ định thời của NE555.' });
 add({ ref: 'C2', part: 'Tụ gốm 10 nF', value: '103', fp: 'CAP', x: 10, y: 16, pins: { 1: 'C555', 2: 'GND' }, role: 'cap', vn: 'Lọc chân CONT (5) của NE555.' });
 
-// --- công tắc T_X, T_V (bật = 1) + điện trở kéo xuống
-add({ ref: 'SW1', part: 'DIP switch 8 vị trí', fp: 'DIPSW8', x: 3, y: 30, pins: {}, role: 'dipsw', from: 'TX', vn: 'Đặt T_X: vị trí 1–4 = TX0–TX3 (hàng đơn vị), 5–8 = TX4–TX7 (hàng chục). Gạt lên = 1.' });
-add({ ref: 'RN1', part: 'Điện trở mạng 8 × 470 Ω', value: 'A471J', fp: 'SIP9', x: 2, y: 33, pins: { 1: 'GND' }, role: 'rnet', vn: 'Kéo TX0–TX7 xuống 0 khi công tắc tắt.' });
-for (let i = 0; i < 8; i++) { byRef.SW1.pins[i + 1] = 'TX' + i; byRef.SW1.pins[16 - i] = 'VCC'; byRef.RN1.pins[i + 2] = 'TX' + i; }
-add({ ref: 'SW2', part: 'DIP switch 4 vị trí', fp: 'DIPSW4', x: 3, y: 42, pins: {}, role: 'dipsw', from: 'TV', vn: 'Đặt T_V: vị trí 1–4 = TV0–TV3. Gạt lên = 1.' });
-add({ ref: 'RN2', part: 'Điện trở mạng 4 × 470 Ω', value: 'A471J', fp: 'SIP5', x: 2, y: 45, pins: { 1: 'GND' }, role: 'rnet', vn: 'Kéo TV0–TV3 xuống 0 khi công tắc tắt.' });
-for (let i = 0; i < 4; i++) { byRef.SW2.pins[i + 1] = 'TV' + i; byRef.SW2.pins[8 - i] = 'VCC'; byRef.RN2.pins[i + 2] = 'TV' + i; }
-add({ ref: 'SW3', part: 'Công tắc gạt 3 chân (SPDT)', fp: 'SLIDE', x: 3, y: 21, pins: { 1: 'GND', 2: 'RST_N', 3: 'VCC' }, role: 'slide', from: 'SW-RESET', vn: 'SW-RESET: gạt về RESET → RST_N = 0 (giữ reset); gạt về CHẠY → RST_N = 1.' });
+// --- công tắc T_X, T_V: 3 DIP switch 4 vị trí (gạt lên = 1) + điện trở mạng 4 × 1 kΩ kéo xuống (Bảng A.1: 12 điện trở 1 kΩ)
+const DIPS = [['SW1', 'RN1', ['TX0', 'TX1', 'TX2', 'TX3'], 27, 'Đặt hàng đơn vị của T_X'],
+              ['SW2', 'RN2', ['TX4', 'TX5', 'TX6', 'TX7'], 36, 'Đặt hàng chục của T_X'],
+              ['SW3', 'RN3', ['TV0', 'TV1', 'TV2', 'TV3'], 45, 'Đặt T_V']];
+for (const [sw, rn, bits, y, what] of DIPS) {
+  const c = add({ ref: sw, part: 'DIP switch 4 vị trí', fp: 'DIPSW4', x: 3, y, pins: {}, role: 'dipsw', bits, from: bits[0].slice(0, 2), vn: `${what}: vị trí 1–4 = ${bits.join(', ')}. Gạt lên = 1.` });
+  const r = add({ ref: rn, part: 'Điện trở mạng 4 × 1 kΩ', value: 'A102J', fp: 'SIP5', x: 2, y: y + 4, pins: { 1: 'GND' }, role: 'rnet', vn: `Kéo ${bits[0]}–${bits[3]} xuống 0 khi công tắc tắt (1 kΩ: dòng 0,4 mA của ngõ vào 74LS chỉ tạo 0,4 V, vẫn là mức 0).` });
+  bits.forEach((b, i) => { c.pins[i + 1] = b; c.pins[8 - i] = 'VCC'; r.pins[i + 2] = b; });
+}
+// --- RESET: công tắc gạt nối RST_N xuống GND + điện trở 10 kΩ kéo lên (thay nút nhấn của báo cáo để dễ thao tác; cùng mức logic)
+add({ ref: 'SW4', part: 'Công tắc gạt (dùng 2 chân)', fp: 'SLIDE', x: 3, y: 20, pins: { 1: 'GND', 2: 'RST_N' }, role: 'slide', from: 'SW-RESET',
+  vn: 'SW-RESET: gạt về RESET thì RST_N nối GND (= 0, giữ reset); gạt về CHẠY thì hở, R23 kéo RST_N lên 1. Thay cho nút nhấn trong báo cáo, cùng mức logic.' });
+add({ ref: 'R23', part: 'Điện trở 10 kΩ', value: '10k', fp: 'AXIAL_V', x: 8, y: 20, pins: { 1: 'RST_N', 2: 'VCC' }, role: 'res', vn: 'Kéo RST_N lên 1 khi công tắc RESET hở.' });
 
 // --- điện trở kéo lên cho 8 ngõ vào CMOS của CD4078B (ngõ ra TTL mức 1 chỉ ~3,4 V)
-add({ ref: 'RN3', part: 'Điện trở mạng 8 × 4,7 kΩ', value: 'A472J', fp: 'SIP9_V', x: 38, y: 32, pins: { 1: 'VCC' }, role: 'rnet',
+add({ ref: 'RN4', part: 'Điện trở mạng 8 × 4,7 kΩ', value: 'A472J', fp: 'SIP9_V', x: 38, y: 32, pins: { 1: 'VCC' }, role: 'rnet',
   vn: 'Kéo lên CU0–CU3, CC0–CC3: ngõ ra 74LS192 ở mức 1 chỉ khoảng 3,4 V, thấp hơn ngưỡng 3,5 V của CD4078B; kéo lên đưa mức 1 gần 5 V. Không đổi chức năng logic.' });
-['CU0', 'CU1', 'CU2', 'CU3', 'CC0', 'CC1', 'CC2', 'CC3'].forEach((n, i) => (byRef.RN3.pins[i + 2] = n));
+['CU0', 'CU1', 'CU2', 'CU3', 'CC0', 'CC1', 'CC2', 'CC3'].forEach((n, i) => (byRef.RN4.pins[i + 2] = n));
 
-// --- 6 đèn giao thông
+// --- 6 đèn giao thông: hút dòng qua U13 (74LS04) như Bảng B.1. Tín hiệu đèn = 1 → ngõ ra U13 = 0 → LED sáng.
+//     Anode qua 330 Ω lên VCC, cathode vào ngõ ra U13. Logic đèn không đổi, chỉ thêm tầng lái dòng.
 const LAMPS = [['LDA', 'D1', 'red', 72, 6], ['LVA', 'D2', 'yellow', 72, 10], ['LXA', 'D3', 'green', 72, 14],
                ['LDB', 'D4', 'red', 81, 6], ['LVB', 'D5', 'yellow', 81, 10], ['LXB', 'D6', 'green', 81, 14]];
+const U13MAP = { LXA: [1, 2], LVA: [3, 4], LDA: [5, 6], LXB: [9, 8], LVB: [11, 10], LDB: [13, 12] };   // Bảng B.1
+const u13 = pwr(add({ ref: 'U13', part: '74LS04', fp: 'DIP14', x: 64, y: 22, pins: {}, role: 'ic',
+  vn: 'NOT 6 cổng, lái 6 LED đơn kiểu hút dòng (mạch cứng): I_OL = 8 mA đủ cho LED, trong khi ngõ ra 74LS08 ở mức 1 chỉ cấp 0,4 mA. Mỗi tín hiệu đèn qua một cổng đảo; logic đèn không đổi.' }), 14, 7);
 let rl = 17;
 for (const [lid, dref, col, x, y] of LAMPS) {
-  const net = N(cc(lid).ins[0]), an = dref + '_A', vn = cc(lid).vn;
-  add({ ref: 'R' + rl, part: 'Điện trở 1 kΩ', value: '1k', fp: 'AXIAL_H', x: x - 6, y, pins: { 1: net, 2: an }, role: 'res', vn: 'Hạn dòng ' + vn.toLowerCase() + '.' });
-  add({ ref: dref, part: `LED 5 mm ${col === 'red' ? 'đỏ' : col === 'yellow' ? 'vàng' : 'xanh lá'}`, fp: 'LED5', x: x - 1, y, color: col, pins: { 1: an, 2: 'GND' }, role: 'led', from: lid, vn });
+  const net = N(cc(lid).ins[0]), an = dref + '_A', k = dref + '_K', vn = cc(lid).vn, [pi, po] = U13MAP[lid];
+  u13.pins[pi] = net; u13.pins[po] = k;
+  add({ ref: 'R' + rl, part: 'Điện trở 330 Ω', value: '330', fp: 'AXIAL_H', x: x - 6, y, pins: { 1: 'VCC', 2: an }, role: 'res', vn: 'Hạn dòng ' + vn.toLowerCase() + ' (≈ 9 mA).' });
+  add({ ref: dref, part: `LED 5 mm ${col === 'red' ? 'đỏ' : col === 'yellow' ? 'vàng' : 'xanh lá'}`, fp: 'LED5', x: x - 1, y, color: col, pins: { 1: an, 2: k }, role: 'led', from: lid, vn });
   rl++;
 }
 
 // --- nguồn 5 V + tụ lọc
 add({ ref: 'J1', part: 'Domino 2 chân 5,08 mm', fp: 'TERM2', x: 3, y: 7, pins: { 1: 'VCC', 2: 'GND' }, role: 'term', vn: 'Cấp nguồn 5 V một chiều: chân 1 = +5 V, chân 2 = GND.' });
-add({ ref: 'C18', part: 'Tụ hóa 100 µF', value: '100µ', fp: 'RADIAL', x: 8, y: 7, pins: { 1: 'VCC', 2: 'GND' }, role: 'ecap', vn: 'Tụ lọc nguồn chung.' });
 // tụ 100 nF sát chân VCC mỗi IC
 let cn = 3;
 for (const c of comps.filter(c => c.role === 'ic')) {
   const n2 = c.fp === 'DIP8' ? 4 : c.fp === 'DIP14' ? 7 : 8;
   add({ ref: 'C' + cn++, part: 'Tụ gốm 100 nF', value: '104', fp: 'CAP_V', x: c.x - 2, y: c.y - 3, pins: { 1: 'VCC', 2: 'GND' }, role: 'cap', vn: `Tụ lọc nguồn cho ${c.ref}.` });
 }
+add({ ref: 'C' + cn++, part: 'Tụ hóa 100 µF', value: '100µ', fp: 'RADIAL', x: 8, y: 7, pins: { 1: 'VCC', 2: 'GND' }, role: 'ecap', vn: 'Tụ lọc nguồn chung, đặt cạnh đầu cấp nguồn J1.' });
 
 /* ================= 2. FOOTPRINT ================= */
 function fpPins(fp) {      // [num, dx, dy] theo u; dy âm = lên trên
@@ -278,7 +288,7 @@ const uniqVia = [...new Map(vias.map(v => [v.x + ',' + v.y, v])).values()];
 const OUT = {
   board: { w: BW * U, h: BH * U, t: 1.6, title: 'BÀI 11 · ĐÈN GIAO THÔNG NGÃ TƯ', rev: 'Rev 1.0' },
   holes: holes.map(h => ({ x: mm(h.gx), y: mm(h.gy), d: h.d })),
-  comps: comps.map(c => ({ ref: c.ref, part: c.part, value: c.value || '', fp: c.fp, x: +(c.x * U).toFixed(3), y: +(c.y * U).toFixed(3), role: c.role, color: c.color, from: c.from || null, gates: c.gates || null, vn: c.vn || '',
+  comps: comps.map(c => ({ ref: c.ref, part: c.part, value: c.value || '', fp: c.fp, bits: c.bits, x: +(c.x * U).toFixed(3), y: +(c.y * U).toFixed(3), role: c.role, color: c.color, from: c.from || null, gates: c.gates || null, vn: c.vn || '',
     pins: c.pinList.map(p => ({ n: p.num, x: mm(p.gx), y: mm(p.gy), net: p.net, d: p.d, drill: p.drill, sq: p.sq })) })),
   traces, vias: uniqVia.map(v => ({ x: v.x, y: v.y, net: v.net, d: 0.8, drill: 0.4 }))
 };
