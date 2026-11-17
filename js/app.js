@@ -111,8 +111,7 @@
     $('lampText').innerHTML = `<div>Hướng A ${lamp(L.DA, L.VA, 0, L.XA)}</div><div>Hướng B ${lamp(L.DB, L.VB, 0, L.XB)}</div>`;
     const col = (d, v, x) => (d === 'X' || v === 'X' || x === 'X') ? 'n' : (x === 1 ? 'g' : (v === 1 ? 'y' : (d === 1 ? 'r' : 'n')));
     const lA = col(L.DA, L.VA, L.XA), lB = col(L.DB, L.VB, L.XB);
-    SC.setLights(lA, lB); const hn = parseInt(hx, 10), addV = (!st.includes('X') && st[1] === '0') ? A.sim.getSwitchValue('TV') : 0;
-    SC.setCount(hx === 'X' ? 'XX' : hx, (hx === 'X' || isNaN(hn)) ? 'XX' : String(hn + addV).padStart(2, '0'));   // đèn đỏ = số đếm + T_V khi đang ở pha xanh SC.setPower(A.powered);
+    SC.setLights(lA, lB); SC.setCount(hx === 'X' ? 'XX' : hx); SC.setPower(A.powered);   // mọi đèn (kể cả đỏ) hiện đúng số đếm của mạch: T_X rồi T_V
     $('hudHex').textContent = hx === 'X' ? 'XX' : hx; $('hudHex').classList.toggle('x', hx === 'X');
     $('hudLamps').innerHTML = $('lampText').innerHTML; $('hudPhase').textContent = ph;
     $('hudStats').innerHTML = `Đã qua: A <b>${SC.stats.A}</b> · B <b>${SC.stats.B}</b> xe<br>Đang chờ: A <b>${SC.wait.A}</b> · B <b>${SC.wait.B}</b> xe`;
