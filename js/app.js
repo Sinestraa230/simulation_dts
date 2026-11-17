@@ -259,14 +259,24 @@
 
   /* ---------- chế độ xem ---------- */
   function setView(v) {
-    A.view = v; $('main').className = 'view-' + v;
+    A.view = v; $('main').className = 'view-' + v + (v === 'city' && A.cityBottom ? ' with-bottom' : '');
     document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     SC.setTargets(v === 'circuit' ? [$('sceneMini')] : [$('sceneBig')]);
     if (v !== 'city') requestAnimationFrame(() => requestAnimationFrame(() => R.fit()));
+    else if (innerWidth <= 1100 && A.viewInit) requestAnimationFrame(() => $('scenePanel').scrollIntoView({ block: 'start', behavior: 'smooth' }));
     try { history.replaceState(null, '', v === 'circuit' ? location.pathname : '#' + v); } catch (e) { }
   }
   document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => setView(b.dataset.view));
   $('sceneMini').onclick = () => setView('split');
+  // ngã tư: mặc định chiếm trọn màn hình; giản đồ/chú thích bật khi cần
+  $('btnTiming').onclick = () => { A.cityBottom = !A.cityBottom; $('btnTiming').classList.toggle('on', A.cityBottom); setView(A.view); };
+  const fsEl = $('scenePanel');
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $('btnFull').hidden = true;
+  $('btnFull').onclick = () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl);
+  };
+  document.addEventListener('fullscreenchange', () => { $('btnFull').textContent = document.fullscreenElement ? '✕ Thoát toàn màn hình' : '⛶ Toàn màn hình'; });
   document.querySelectorAll('#todSeg button').forEach(b => b.onclick = () => { document.querySelectorAll('#todSeg button').forEach(x => x.classList.toggle('on', x === b)); SC.setTod(+b.dataset.tod); });
   document.querySelectorAll('#denSeg button').forEach(b => b.onclick = () => { document.querySelectorAll('#denSeg button').forEach(x => x.classList.toggle('on', x === b)); SC.setDensity(+b.dataset.den); });
   $('chkRain').onchange = e => SC.setRain(e.target.checked);
@@ -275,6 +285,6 @@
 
   /* ---------- khởi động ---------- */
   newSim(); renderCaps(); setMode('real');
-  setView(['split', 'city'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'circuit');
+  setView(['split', 'city'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'circuit'); A.viewInit = true;
   requestAnimationFrame(t => { A.lastNow = t; frame(t); });
 })();
